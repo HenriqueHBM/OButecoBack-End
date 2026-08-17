@@ -18,14 +18,6 @@ import java.util.List;
 public class UsuariosController {
     private final UsuariosService usuariosService;
 
-    //To-Do
-    //POST /obuteco/usuario Feito
-    //GET /obuteco/usuario Feito
-    //GET /obuteco/usuario/{id} Feito
-    //PUT /obuteco/usuario/{id} Feito
-    //PATCH /obuteco/usuario/{id} Feito
-    //DELETE /obuteco/usuario/{id} Feito
-
     @PostMapping()
     public ResponseEntity<UsuariosResponse> salvarUsuario(@Valid @RequestBody UsuariosRequest usuariosRequest) {
         UsuariosEntity usuariosEntity = this.usuariosService.salvarUsuario(usuariosRequest);
