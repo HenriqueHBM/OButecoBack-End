@@ -13,7 +13,7 @@ import projeto.OButecoBack_End.Service.CargosService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/obuteco/cargos")
+@RequestMapping("/usuarios/cargos")
 @RequiredArgsConstructor
 public class CargosController {
     private final CargosService cargosService;

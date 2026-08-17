@@ -11,7 +11,7 @@ import projeto.OButecoBack_End.Entity.UsuariosEntity;
 import projeto.OButecoBack_End.Service.LoginService;
 
 @RestController
-@RequestMapping("/obuteco/login")
+@RequestMapping("/login")
 @RequiredArgsConstructor
 public class LoginController {
     private final LoginService loginService;

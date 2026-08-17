@@ -70,7 +70,9 @@ public class UsuariosService {
     public UsuariosEntity atualizarUsuarioParcial(Long id, UsuariosRequest usuariosRequest) {
         UsuariosEntity usuariosEntity = buscarUsuarioPorId(id);
 
+        //verifica se nao esta vazio o usuario no request e se existe/presente tal usuario
         if (usuariosRequest.usuario() != null && !usuariosEntity.getUsuario().equals(usuariosRequest.usuario())) {
+            //verifica se nao existe um outro usuario com o mesmo nome do passsado para atualizar
             if (usuariosRepository.findByUsuarioAndDeletedAtIsNull(usuariosRequest.usuario()).isPresent()) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuário já existe");
             }
@@ -81,6 +83,7 @@ public class UsuariosService {
         if (usuariosRequest.senha() != null) usuariosEntity.setSenha(usuariosRequest.senha());
 
         if (usuariosRequest.cargoId() != null) {
+            //procura o cargo antes de atualizar se nao lanca exeption
             CargosEntity cargo = cargosRepository.findById(usuariosRequest.cargoId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cargo não encontrado"));
             usuariosEntity.setCargosEntity(cargo);
@@ -92,7 +95,9 @@ public class UsuariosService {
     public void deletarUsuarioPorId(Long id){
         UsuariosEntity usuariosEntity = this.buscarUsuarioPorId(id);
 
-        usuariosEntity.setDeleted_at(new Timestamp(System.currentTimeMillis()));
+        //nao é deletado de fato o usuario, apenas preenche um campo de deleted_at e nao
+        // ignora em outras consultas caso esteja preenchido esse campo
+        usuariosEntity.setDeletedAt(new Timestamp(System.currentTimeMillis()));
         this.usuariosRepository.save(usuariosEntity);  //lembrar de criar um status de ativo e inativo para usuario
     }
 

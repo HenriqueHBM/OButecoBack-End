@@ -12,7 +12,7 @@ public interface UsuariosRepository extends JpaRepository<UsuariosEntity,Long> {
     List<UsuariosEntity> findAllByDeletedAtIsNull();
     Optional<UsuariosEntity> findByIdAndDeletedAtIsNull(Long id);
 
-    @Query("SELECT u FROM UsuariosEntity u WHERE LOWER(u.nome) LIKE LOWER(CONCAT('%', :nome, '%')) AND u.deleted_at IS NULL")
+    @Query("SELECT u FROM UsuariosEntity u WHERE LOWER(u.nome) LIKE LOWER(CONCAT('%', :nome, '%')) AND u.deletedAt IS NULL")
     List<UsuariosEntity> findByNome(@Param("nome") String nome);
 
     Optional<UsuariosEntity> findByUsuarioAndDeletedAtIsNull(String usuario);
