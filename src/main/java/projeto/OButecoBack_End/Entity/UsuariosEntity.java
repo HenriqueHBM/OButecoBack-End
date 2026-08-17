@@ -1,11 +1,17 @@
-package projeto.OButecoBack_End.Entity.Usuarios;
+package projeto.OButecoBack_End.Entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.sql.Date;
 import java.sql.Timestamp;
+
+@Getter
+@Setter
+@ToString
 
 @Entity
 @Table(name = "usuarios")
@@ -14,7 +20,6 @@ public class UsuariosEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
 
     @Column(name = "nome", nullable = false)
     private String nome;
@@ -29,9 +34,11 @@ public class UsuariosEntity {
     @JoinColumn(name = "id_cargo", nullable = false)
     private CargosEntity cargosEntity;
 
+    @CreationTimestamp
     @Column(name = "created_at")
     private Timestamp created_at;
 
+    @UpdateTimestamp
     @Column(name = "updated_at")
     private Timestamp updated_at;
 
