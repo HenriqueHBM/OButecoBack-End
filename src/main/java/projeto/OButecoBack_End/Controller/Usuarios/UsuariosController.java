@@ -13,7 +13,7 @@ import projeto.OButecoBack_End.Service.UsuariosService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/obuteco/usuario")
+@RequestMapping("/usuarios")
 @RequiredArgsConstructor
 public class UsuariosController {
     private final UsuariosService usuariosService;

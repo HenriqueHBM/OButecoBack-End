@@ -24,7 +24,7 @@ public record UsuariosResponse(
                 usuariosEntity.getCargosEntity().getCargo(),
                 usuariosEntity.getCreated_at(),
                 usuariosEntity.getUpdated_at(),
-                usuariosEntity.getDeleted_at()
+                usuariosEntity.getDeletedAt()
         );
     }
 }

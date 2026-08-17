@@ -35,13 +35,13 @@ public class UsuariosEntity {
     private CargosEntity cargosEntity;
 
     @CreationTimestamp
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = true)
     private Timestamp created_at;
 
     @UpdateTimestamp
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = true)
     private Timestamp updated_at;
 
-    @Column(name = "deleted_at")
-    private Timestamp deleted_at;
+    @Column(name = "deleted_at", nullable = true)
+    private Timestamp deletedAt;
 }

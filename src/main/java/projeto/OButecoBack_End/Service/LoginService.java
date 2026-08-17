@@ -14,9 +14,11 @@ public class LoginService {
     private final UsuariosRepository usuariosRepository;
 
     public UsuariosEntity autenticaoDoLogin(LoginRequest loginRequest) {
+        //procura se existe o usuarios vindo do request
         UsuariosEntity usuario = usuariosRepository.findByUsuarioAndDeletedAtIsNull(loginRequest.usuario())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario ou senha invalidos"));
 
+        //verifica a senha se bate
         if (!usuario.getSenha().equals(loginRequest.senha())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario ou senha invalidos");
         }
