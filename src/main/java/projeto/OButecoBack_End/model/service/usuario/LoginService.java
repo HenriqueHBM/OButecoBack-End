@@ -1,0 +1,28 @@
+package projeto.OButecoBack_End.model.service.usuario;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import projeto.OButecoBack_End.controller.login.dto.LoginRequest;
+import projeto.OButecoBack_End.model.entity.usuario.UsuariosEntity;
+import projeto.OButecoBack_End.model.repository.usuario.UsuariosRepository;
+
+@Service
+@RequiredArgsConstructor
+public class LoginService {
+    private final UsuariosRepository usuariosRepository;
+
+    public UsuariosEntity autenticaoDoLogin(LoginRequest loginRequest) {
+        //procura se existe o usuarios vindo do request
+        UsuariosEntity usuario = usuariosRepository.findByUsuarioAndDeletedAtIsNull(loginRequest.usuario())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario ou senha invalidos"));
+
+        //verifica a senha se bate
+        if (!usuario.getSenha().equals(loginRequest.senha())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario ou senha invalidos");
+        }
+
+        return usuario;
+    }
+}
