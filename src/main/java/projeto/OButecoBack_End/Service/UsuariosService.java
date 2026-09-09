@@ -37,6 +37,8 @@ public class UsuariosService {
         usuariosEntity.setNome(usuariosRequest.nome());
         usuariosEntity.setUsuario(usuariosRequest.usuario());
         usuariosEntity.setSenha(usuariosRequest.senha());
+        usuariosEntity.setStatus(true);
+
 
         CargosEntity cargo = cargosRepository.findById(usuariosRequest.cargoId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cargo nao encontrado"));
@@ -67,6 +69,11 @@ public class UsuariosService {
         return this.usuariosRepository.save(usuariosEntity);
     }
 
+    public UsuariosEntity atualizarStatusUsuario(Long id){
+        UsuariosEntity usuario = buscarUsuarioPorId(id);
+        usuario.setStatus(usuario.getStatus().equals(true) ? false: true);
+        return this.usuariosRepository.save(usuario);
+    }
     public UsuariosEntity atualizarUsuarioParcial(Long id, UsuariosRequest usuariosRequest) {
         UsuariosEntity usuariosEntity = buscarUsuarioPorId(id);
 

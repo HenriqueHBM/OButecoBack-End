@@ -10,7 +10,8 @@ public record UsuariosResponse(
         String nome,
         String usuario,
         String senha,
-        String cargo,
+        Boolean status,
+        Long cargo,
         Timestamp created_at,
         Timestamp updated_at,
         Timestamp deleted_at
@@ -21,7 +22,8 @@ public record UsuariosResponse(
                 usuariosEntity.getNome(),
                 usuariosEntity.getUsuario(),
                 usuariosEntity.getSenha(),
-                usuariosEntity.getCargosEntity().getCargo(),
+                usuariosEntity.getStatus(),
+                usuariosEntity.getCargosEntity().getId(),
                 usuariosEntity.getCreated_at(),
                 usuariosEntity.getUpdated_at(),
                 usuariosEntity.getDeletedAt()

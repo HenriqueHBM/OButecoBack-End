@@ -15,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/usuarios/cargos")
 @RequiredArgsConstructor
+@CrossOrigin("*")
 public class CargosController {
     private final CargosService cargosService;
 

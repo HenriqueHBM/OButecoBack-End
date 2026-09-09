@@ -15,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/usuarios")
 @RequiredArgsConstructor
+@CrossOrigin("*") //pode-se passar um ip para apenas aquele servidor fazer as requisicoes ex. http://localhost:5432
 public class UsuariosController {
     private final UsuariosService usuariosService;
 
@@ -38,7 +39,15 @@ public class UsuariosController {
             return new ResponseEntity<>(UsuariosResponse.de(usuariosEntity), HttpStatus.OK);
     }
 
-    @GetMapping()
+    @PatchMapping("change_status/{id}")
+    public ResponseEntity<UsuariosResponse> atualizarStatusUsuario(
+            @PathVariable Long id
+    ){
+        UsuariosEntity usuariosEntity = this.usuariosService.atualizarStatusUsuario(id);
+        return new ResponseEntity<>(UsuariosResponse.de(usuariosEntity), HttpStatus.OK);
+    }
+
+        @GetMapping()
     public ResponseEntity<List<UsuariosResponse>> listarUsuarios () {
         List<UsuariosResponse> usuarios = this.usuariosService.listarUsuarios()
                 .stream()
