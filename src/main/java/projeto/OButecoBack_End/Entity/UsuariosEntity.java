@@ -30,6 +30,9 @@ public class UsuariosEntity {
     @Column(name = "senha", nullable = false)
     private String senha;
 
+    @Column(name = "status")
+    private Boolean status;
+
     @ManyToOne
     @JoinColumn(name = "id_cargo", nullable = false)
     private CargosEntity cargosEntity;
