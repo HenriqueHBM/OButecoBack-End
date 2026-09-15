@@ -40,8 +40,8 @@ public class ProdutosEntity {
     @JoinColumn(name = "fk_id_grupo")
     private GruposEntity grupoEntity;
 
-    @OneToMany(mappedBy = "produtoEntity", cascade = CascadeType.ALL)
-    private List<ProdutosEntity> insumos = new ArrayList<>();
+    //@OneToMany(mappedBy = "produtoEntity", cascade = CascadeType.ALL)
+    //private List<ProdutosEntity> insumos = new ArrayList<>();
 
     @Column(name = "preco_venda")
     private double precoVenda;
@@ -50,7 +50,7 @@ public class ProdutosEntity {
     private String observacao;
 
     @OneToMany(mappedBy = "produtosEntity", cascade = CascadeType.ALL)
-    private List<EstoquesEntity> estoqueEntities = new ArrayList<>();
+    private List<EstoquesEntity> EstoquesEntity = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at")

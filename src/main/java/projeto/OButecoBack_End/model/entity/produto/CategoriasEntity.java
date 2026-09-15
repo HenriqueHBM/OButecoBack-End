@@ -3,6 +3,8 @@ package projeto.OButecoBack_End.model.entity.produto;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.sql.Timestamp;
+
 @Getter
 @Setter
 @ToString
@@ -16,5 +18,8 @@ public class CategoriasEntity {
 
     @Column(name = "categoria",  nullable = false)
     private String categoria;
+
+    @Column(name = "deleted_at", nullable = true)
+    private Timestamp deletedAt;
 
 }

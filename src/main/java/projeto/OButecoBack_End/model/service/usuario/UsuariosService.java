@@ -48,7 +48,7 @@ public class UsuariosService {
     }
 
     public UsuariosEntity atualizarUsuario(Long id, UsuariosRequest usuariosRequest) {
-        UsuariosEntity usuariosEntity = buscarUsuarioPorId(id);
+        UsuariosEntity usuariosEntity = this.buscarUsuarioPorId(id);
 
         if (!usuariosEntity.getUsuario().equals(usuariosRequest.usuario())) {
             if (usuariosRepository.findByUsuarioAndDeletedAtIsNull(usuariosRequest.usuario()).isPresent()) {
@@ -70,7 +70,7 @@ public class UsuariosService {
     }
 
     public UsuariosEntity atualizarStatusUsuario(Long id){
-        UsuariosEntity usuario = buscarUsuarioPorId(id);
+        UsuariosEntity usuario = this.buscarUsuarioPorId(id);
         usuario.setStatus(usuario.getStatus().equals(true) ? false: true);
         return this.usuariosRepository.save(usuario);
     }

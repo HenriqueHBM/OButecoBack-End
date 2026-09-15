@@ -20,7 +20,7 @@ public class CategoriasController {
 
     @PostMapping()
     public ResponseEntity<CategoriasResponse> salvarCategoria(@Valid @RequestBody CategoriasRequest categoriasRequest){
-        CategoriasEntity categoriasEntity = this.categoriasService.salvarCategoria();
+        CategoriasEntity categoriasEntity = this.categoriasService.salvarCategoria(categoriasRequest);
         return new ResponseEntity<>(CategoriasResponse.de(categoriasEntity), HttpStatus.CREATED);
     }
 }
