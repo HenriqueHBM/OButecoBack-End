@@ -9,6 +9,6 @@ import projeto.OButecoBack_End.model.service.produto.ProdutosService;
 @RequestMapping("/produtos")
 @RequiredArgsConstructor
 public class ProdutosController {
-    private final ProdutosService produtosService;
+    //private final ProdutosService produtosService;
 
 }

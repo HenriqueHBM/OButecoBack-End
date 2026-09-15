@@ -14,12 +14,12 @@ public class InsumosProdutoEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "fk_id_produto")
+    @ManyToOne
+    @JoinColumn(name = "fk_id_produto", nullable = false)
     private ProdutosEntity produtoEntity;
 
     @ManyToOne
-    @JoinColumn(name = "fk_insumos_produto")
+    @JoinColumn(name = "fk_insumos_produto", nullable = false)
     private ProdutosEntity insumos;
 
     @Column(name = "qtde")

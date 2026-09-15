@@ -22,7 +22,7 @@ public class EstoquesEntity {
 
     @ManyToOne
     @JoinColumn(name = "fk_id_produto", nullable = false)
-    private ProdutosEntity produtoEntity;
+    private ProdutosEntity produtosEntity;
 
     @Column(name = "qtde_estoque", nullable = true)
     private double qntdEstoque;

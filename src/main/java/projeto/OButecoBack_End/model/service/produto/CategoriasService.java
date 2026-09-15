@@ -4,11 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import projeto.OButecoBack_End.controller.produto.categoria.dto.CategoriasRequest;
 import projeto.OButecoBack_End.model.entity.produto.CategoriasEntity;
 import projeto.OButecoBack_End.model.entity.produto.GruposEntity;
 import projeto.OButecoBack_End.model.repository.produto.CategoriasRepository;
 import projeto.OButecoBack_End.model.repository.usuario.CargosRepository;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 @Service
@@ -23,16 +25,24 @@ public class CategoriasService {
         );
     }
 
-    public CategoriasEntity salvarCategoria(){
+    public CategoriasEntity salvarCategoria(CategoriasRequest categoria){
 
+        CategoriasEntity categoriasEntity = new CategoriasEntity();
+        categoriasEntity.setCategoria(categoria.categoria());
+        return this.categoriasRepository.save(categoriasEntity);
     }
 
-    public CategoriasEntity atualizarCategoira(Long id){
-
+    public CategoriasEntity atualizarCategoira(Long id, CategoriasRequest categoria){
+        CategoriasEntity categoriasEntity = this.buscarCategoriaPorId(id);
+        categoriasEntity.setCategoria(categoria.categoria());
+        return this.categoriasRepository.save(categoriasEntity);
     }
 
     public void deletarCateogira(Long id){
+        CategoriasEntity categoriasEntity = this.buscarCategoriaPorId(id);
 
+        categoriasEntity.setDeletedAt(new Timestamp(System.currentTimeMillis()));
+        this.categoriasRepository.save(categoriasEntity);
     }
 
     public List<CategoriasEntity> listarCategorias(){
