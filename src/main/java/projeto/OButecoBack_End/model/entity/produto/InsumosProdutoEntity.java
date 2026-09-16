@@ -16,7 +16,7 @@ public class InsumosProdutoEntity {
 
     @ManyToOne
     @JoinColumn(name = "fk_id_produto", nullable = false)
-    private ProdutosEntity produtoEntity;
+    private ProdutosEntity produtosEntity;
 
     @ManyToOne
     @JoinColumn(name = "fk_insumos_produto", nullable = false)

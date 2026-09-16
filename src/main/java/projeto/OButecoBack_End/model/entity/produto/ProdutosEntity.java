@@ -9,9 +9,12 @@ import org.hibernate.annotations.UpdateTimestamp;
 import projeto.OButecoBack_End.model.entity.estoque.EstoquesEntity;
 import projeto.OButecoBack_End.model.Enum.EStatus;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -34,17 +37,17 @@ public class ProdutosEntity {
 
     @ManyToOne
     @JoinColumn(name = "fk_id_categoria")
-    private CategoriasEntity categoriaEntity;
+    private CategoriasEntity categoria;
 
     @ManyToOne
     @JoinColumn(name = "fk_id_grupo")
-    private GruposEntity grupoEntity;
+    private GruposEntity grupo;
 
     //@OneToMany(mappedBy = "produtoEntity", cascade = CascadeType.ALL)
     //private List<ProdutosEntity> insumos = new ArrayList<>();
 
     @Column(name = "preco_venda")
-    private double precoVenda;
+    private Double precoVenda;
 
     @Column(name = "observacao")
     private String observacao;
@@ -54,10 +57,21 @@ public class ProdutosEntity {
 
     @CreationTimestamp
     @Column(name = "created_at")
-    private Instant dataCriacao;
+    private Timestamp dataCriacao;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
-    private Instant dataAtualizacao;
+    private Timestamp dataAtualizacao;
+
+    @Column(name = "deleted_at", nullable = true)
+    private Timestamp deletedAt;
+
+    @ManyToMany
+    @JoinTable(
+            name = "insumos_produtos",
+            joinColumns = @JoinColumn(name = "fk_id_produto"),
+            inverseJoinColumns = @JoinColumn(name = "fk_insumos_produto")
+    )
+    private Set<ProdutosEntity> insumosEntity = new HashSet<>();
 
 }
