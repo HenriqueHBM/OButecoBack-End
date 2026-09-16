@@ -16,7 +16,7 @@ public record UsuariosRequest(
         @NotNull(message = "Cargo é obrigatório")
         Long cargoId,
         Timestamp created_at,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        Timestamp updated_at,
+        Timestamp updated_at,
         Timestamp deleted_at
 ) {
     public static UsuariosRequest de(UsuariosEntity usuariosEntity) {
