@@ -1,18 +1,21 @@
 package projeto.OButecoBack_End.controller.produto.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import projeto.OButecoBack_End.model.Enum.CategoriaEnum;
 import projeto.OButecoBack_End.model.Enum.EStatus;
+import projeto.OButecoBack_End.model.Enum.GrupoEnum;
 import projeto.OButecoBack_End.model.entity.produto.ProdutosEntity;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 public record ProdutoResponse(
         Long id,
         String nome,
         EStatus status,
-        Long categoriaId,
-        Long grupoId,
-        Double precoVenda,
+        CategoriaEnum categoriaEnum,
+        GrupoEnum grupoEnum,
+        BigDecimal precoVenda,
         String observacao,
         Timestamp created_at,
         Timestamp updated_at,
@@ -23,8 +26,8 @@ public record ProdutoResponse(
                 produtosEntity.getId(),
                 produtosEntity.getNome(),
                 produtosEntity.getStatus(),
-                produtosEntity.getCategoria().getId(),
-                produtosEntity.getGrupo().getId(),
+                produtosEntity.getCategoriaEnum(),
+                produtosEntity.getGrupo(),
                 produtosEntity.getPrecoVenda(),
                 produtosEntity.getObservacao(),
                 produtosEntity.getDataCriacao(),

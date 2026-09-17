@@ -6,6 +6,8 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import projeto.OButecoBack_End.model.Enum.CargoEnum;
+import projeto.OButecoBack_End.model.Enum.EStatus;
 
 import java.sql.Timestamp;
 
@@ -18,7 +20,7 @@ import java.sql.Timestamp;
 public class UsuariosEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "nome", nullable = false)
@@ -30,12 +32,12 @@ public class UsuariosEntity {
     @Column(name = "senha", nullable = false)
     private String senha;
 
-    @Column(name = "status")
-    private Boolean status;
+    @Column(name = "status", nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
+    private EStatus status;
 
-    @ManyToOne
-    @JoinColumn(name = "id_cargo", nullable = false)
-    private CargosEntity cargosEntity;
+    @Column(name = "cargo")
+    private CargoEnum cargo;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = true)

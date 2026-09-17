@@ -1,6 +1,7 @@
 package projeto.OButecoBack_End.controller.usuario.dto;
 
 import jakarta.validation.constraints.*;
+import projeto.OButecoBack_End.model.Enum.CargoEnum;
 import projeto.OButecoBack_End.model.entity.usuario.UsuariosEntity;
 
 import java.sql.Timestamp;
@@ -14,7 +15,7 @@ public record UsuariosRequest(
         @NotBlank(message = "Senha é obrigatória")
         String senha,
         @NotNull(message = "Cargo é obrigatório")
-        Long cargoId,
+        CargoEnum cargoEnum,
         Timestamp created_at,
         Timestamp updated_at,
         Timestamp deleted_at
@@ -25,7 +26,7 @@ public record UsuariosRequest(
                 usuariosEntity.getNome(),
                 usuariosEntity.getUsuario(),
                 usuariosEntity.getSenha(),
-                usuariosEntity.getCargosEntity().getId(),
+                usuariosEntity.getCargo(),
                 usuariosEntity.getCreated_at(),
                 usuariosEntity.getUpdated_at(),
                 usuariosEntity.getDeletedAt()
