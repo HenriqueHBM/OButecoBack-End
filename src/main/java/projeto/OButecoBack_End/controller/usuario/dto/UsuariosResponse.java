@@ -1,5 +1,7 @@
 package projeto.OButecoBack_End.controller.usuario.dto;
 
+import projeto.OButecoBack_End.model.Enum.CargoEnum;
+import projeto.OButecoBack_End.model.Enum.EStatus;
 import projeto.OButecoBack_End.model.entity.usuario.UsuariosEntity;
 
 import java.sql.Timestamp;
@@ -9,8 +11,8 @@ public record UsuariosResponse(
         String nome,
         String usuario,
         String senha,
-        Boolean status,
-        Long cargo,
+        EStatus status,
+        CargoEnum cargo,
         Timestamp created_at,
         Timestamp updated_at,
         Timestamp deleted_at
@@ -22,7 +24,7 @@ public record UsuariosResponse(
                 usuariosEntity.getUsuario(),
                 usuariosEntity.getSenha(),
                 usuariosEntity.getStatus(),
-                usuariosEntity.getCargosEntity().getId(),
+                usuariosEntity.getCargo(),
                 usuariosEntity.getCreated_at(),
                 usuariosEntity.getUpdated_at(),
                 usuariosEntity.getDeletedAt()

@@ -1,10 +1,11 @@
 package projeto.OButecoBack_End.controller.login.dto;
+import projeto.OButecoBack_End.model.Enum.CargoEnum;
 import projeto.OButecoBack_End.model.entity.usuario.UsuariosEntity;
 public record LoginResponse(
         Long id,
         String nome,
         String usuario,
-        String cargo
+        CargoEnum cargo
 ) {
 
 
@@ -13,7 +14,7 @@ public record LoginResponse(
                 usuariosEntity.getId(),
                 usuariosEntity.getNome(),
                 usuariosEntity.getUsuario(),
-                usuariosEntity.getCargosEntity().getCargo()
+                usuariosEntity.getCargo()
         );
     }
 }

@@ -7,6 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import projeto.OButecoBack_End.model.entity.conversao.ConversoesEntity;
 import projeto.OButecoBack_End.model.entity.produto.ProdutosEntity;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Getter
@@ -24,8 +25,8 @@ public class EstoquesEntity {
     @JoinColumn(name = "fk_id_produto", nullable = false)
     private ProdutosEntity produtosEntity;
 
-    @Column(name = "qtde_estoque", nullable = true)
-    private double qntdEstoque;
+    @Column(name = "qtde_estoque", precision = 10, scale = 2, nullable = true)
+    private BigDecimal qntdEstoque;
 
     @ManyToOne
     @JoinColumn(name = "fk_id_conversao", nullable = false)

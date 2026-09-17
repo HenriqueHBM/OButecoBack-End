@@ -6,45 +6,47 @@ import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import projeto.OButecoBack_End.model.Enum.CategoriaEnum;
+import projeto.OButecoBack_End.model.Enum.GrupoEnum;
 import projeto.OButecoBack_End.model.entity.estoque.EstoquesEntity;
 import projeto.OButecoBack_End.model.Enum.EStatus;
 
+import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-
-@Getter
-@Setter
-@ToString
+import java.util.Set;
 
 @Entity
 @Table(name = "produtos")
+@Getter
+@Setter
+@ToString(exclude = {"insumos", "estoques"})
 public class ProdutosEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO )
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "nome")
     private String nome;
 
-    @Column(name = "status")
+    @Column(name = "status", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     @ColumnDefault("'ATIVO'")
-    private EStatus status =  EStatus.ATIVO;
+    private EStatus status;
 
-    @ManyToOne
-    @JoinColumn(name = "fk_id_categoria")
-    private CategoriasEntity categoriaEntity;
+    @Column(name = "categoria", nullable = false, length = 30)
+    @Enumerated(EnumType.STRING)
+    private CategoriaEnum categoriaEnum;
 
-    @ManyToOne
-    @JoinColumn(name = "fk_id_grupo")
-    private GruposEntity grupoEntity;
+    @Column(name = "grupo", nullable = false, length = 30)
+    @Enumerated(EnumType.STRING)
+    private GrupoEnum grupo;
 
-    //@OneToMany(mappedBy = "produtoEntity", cascade = CascadeType.ALL)
-    //private List<ProdutosEntity> insumos = new ArrayList<>();
-
-    @Column(name = "preco_venda")
-    private double precoVenda;
+    @Column(name = "preco_venda", precision = 10, scale = 2, nullable = true)
+    private BigDecimal precoVenda;
 
     @Column(name = "observacao")
     private String observacao;
@@ -54,10 +56,24 @@ public class ProdutosEntity {
 
     @CreationTimestamp
     @Column(name = "created_at")
-    private Instant dataCriacao;
+    private Timestamp dataCriacao;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
-    private Instant dataAtualizacao;
+    private Timestamp dataAtualizacao;
+
+    @Column(name = "deleted_at", nullable = true)
+    private Timestamp deletedAt;
+
+    @OneToMany(mappedBy = "produtosEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<InsumosProdutoEntity> insumos = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "insumos_produtos",
+            joinColumns = @JoinColumn(name = "fk_id_produto"),
+            inverseJoinColumns = @JoinColumn(name = "fk_insumos_produto")
+    )
+    private Set<ProdutosEntity> insumosEntity = new HashSet<>();
 
 }
