@@ -2,12 +2,15 @@ package projeto.OButecoBack_End.controller.usuario;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import projeto.OButecoBack_End.controller.endereco.EnderecoResponse;
 import projeto.OButecoBack_End.controller.usuario.dto.UsuariosRequest;
 import projeto.OButecoBack_End.controller.usuario.dto.UsuariosResponse;
 import projeto.OButecoBack_End.model.entity.usuario.UsuariosEntity;
+import projeto.OButecoBack_End.model.service.endereco.EnderecoService;
 import projeto.OButecoBack_End.model.service.usuario.UsuariosService;
 
 import java.util.List;
@@ -18,6 +21,7 @@ import java.util.List;
 @CrossOrigin("*") //pode-se passar um ip para apenas aquele servidor fazer as requisicoes ex. http://localhost:5432
 public class UsuariosController {
     private final UsuariosService usuariosService;
+    private final EnderecoService enderecoService;
 
     @PostMapping()
     public ResponseEntity<UsuariosResponse> salvarUsuario(@Valid @RequestBody UsuariosRequest usuariosRequest) {
@@ -76,5 +80,10 @@ public class UsuariosController {
         this.usuariosService.deletarUsuarioPorId(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 
+    }
+
+    @GetMapping("/buscarCep/{cep}")
+    public ResponseEntity<EnderecoResponse> buscarCep(@PathVariable String cep){
+        return ResponseEntity.ok(this.enderecoService.buscarPorCep(cep));
     }
 }
