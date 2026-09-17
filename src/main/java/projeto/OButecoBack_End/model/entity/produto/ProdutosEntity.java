@@ -19,12 +19,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@Getter
-@Setter
-@ToString
-
 @Entity
 @Table(name = "produtos")
+@Getter
+@Setter
+@ToString(exclude = {"insumos", "estoques"})
 public class ProdutosEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,9 +45,6 @@ public class ProdutosEntity {
     @Enumerated(EnumType.STRING)
     private GrupoEnum grupo;
 
-    //@OneToMany(mappedBy = "produtoEntity", cascade = CascadeType.ALL)
-    //private List<ProdutosEntity> insumos = new ArrayList<>();
-
     @Column(name = "preco_venda", precision = 10, scale = 2, nullable = true)
     private BigDecimal precoVenda;
 
@@ -68,6 +64,9 @@ public class ProdutosEntity {
 
     @Column(name = "deleted_at", nullable = true)
     private Timestamp deletedAt;
+
+    @OneToMany(mappedBy = "produtosEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<InsumosProdutoEntity> insumos = new ArrayList<>();
 
     @ManyToMany
     @JoinTable(

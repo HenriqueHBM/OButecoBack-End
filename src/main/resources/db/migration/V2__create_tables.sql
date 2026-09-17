@@ -18,7 +18,8 @@ create table insumos_produtos(
      fk_insumos_produto bigint not null,
      qtde decimal(10,2) not null,
      foreign key (fk_id_produto) references produtos(id),
-     foreign key (fk_insumos_produto) references produtos(id)
+     foreign key (fk_insumos_produto) references produtos(id),
+     unique (fk_id_produto, fk_insumos_produto)
 );
 
 

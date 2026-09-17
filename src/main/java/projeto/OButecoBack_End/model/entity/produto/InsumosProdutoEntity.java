@@ -7,8 +7,7 @@ import java.math.BigDecimal;
 
 @Getter
 @Setter
-@ToString
-
+@ToString(exclude = {"produto", "insumo"})
 @Entity
 @Table(name = "insumos_produtos")
 public class InsumosProdutoEntity {
@@ -16,11 +15,11 @@ public class InsumosProdutoEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_id_produto", nullable = false)
     private ProdutosEntity produtosEntity;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_insumos_produto", nullable = false)
     private ProdutosEntity insumos;
 
