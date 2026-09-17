@@ -9,6 +9,7 @@ import projeto.OButecoBack_End.model.entity.conversao.ConversoesEntity;
 import projeto.OButecoBack_End.model.entity.produto.ProdutosEntity;
 import projeto.OButecoBack_End.model.entity.usuario.UsuariosEntity;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Getter
@@ -16,7 +17,7 @@ import java.time.Instant;
 @ToString
 
 @Entity
-@Table(name = "movimentacoes_estoque")
+@Table(name = "movimentacoes_estoques")
 public class MovimentacoesEstoqueEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,14 +30,14 @@ public class MovimentacoesEstoqueEntity {
     @Column(name = "tipo", nullable = false)
     private String tipo;
 
-    @Column(name = "qtde", nullable = false)
-    private double quantidade;
+    @Column(name = "qtde", precision = 10, scale = 2, nullable = false)
+    private BigDecimal quantidade;
 
-    @Column(name = "valor_unitario", nullable = false)
-    private double valorUnitario;
+    @Column(name = "valor_unitario", precision = 10, scale = 2, nullable = false)
+    private BigDecimal valorUnitario;
 
-    @Column(name = "valor_total")
-    private double valorTotal;
+    @Column(name = "valor_total", precision = 10, scale = 2)
+    private BigDecimal valorTotal;
 
     @ManyToOne
     @JoinColumn(name = "fk_id_usuario", nullable = false)
@@ -52,6 +53,9 @@ public class MovimentacoesEstoqueEntity {
 
     @Column(name = "observacao", nullable = true)
     private String observacao;
+
+    @Column(name = "qtde_conversao", precision = 1, scale = 2, nullable = true)
+    private BigDecimal qtdeConversao;
 
     @ManyToOne
     @JoinColumn(name = "fk_id_produto")

@@ -5,9 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import projeto.OButecoBack_End.controller.usuario.dto.UsuariosRequest;
-import projeto.OButecoBack_End.model.entity.usuario.CargosEntity;
+import projeto.OButecoBack_End.model.Enum.EStatus;
 import projeto.OButecoBack_End.model.entity.usuario.UsuariosEntity;
-import projeto.OButecoBack_End.model.repository.usuario.CargosRepository;
 import projeto.OButecoBack_End.model.repository.usuario.UsuariosRepository;
 
 import java.sql.Timestamp;
@@ -17,7 +16,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UsuariosService {
     private final UsuariosRepository usuariosRepository;
-    private final CargosRepository cargosRepository;
 
     public UsuariosEntity buscarUsuarioPorId(Long id){
         return this.usuariosRepository.findByIdAndDeletedAtIsNull(id)
@@ -37,12 +35,7 @@ public class UsuariosService {
         usuariosEntity.setNome(usuariosRequest.nome());
         usuariosEntity.setUsuario(usuariosRequest.usuario());
         usuariosEntity.setSenha(usuariosRequest.senha());
-        usuariosEntity.setStatus(true);
-
-
-        CargosEntity cargo = cargosRepository.findById(usuariosRequest.cargoId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cargo nao encontrado"));
-        usuariosEntity.setCargosEntity(cargo);
+        usuariosEntity.setCargo(usuariosRequest.cargoEnum());
 
         return this.usuariosRepository.save(usuariosEntity);
     }
@@ -59,19 +52,14 @@ public class UsuariosService {
         usuariosEntity.setNome(usuariosRequest.nome());
         usuariosEntity.setUsuario(usuariosRequest.usuario());
         usuariosEntity.setSenha(usuariosRequest.senha());
-
-        if (usuariosRequest.cargoId() != null) {
-            CargosEntity cargo = cargosRepository.findById(usuariosRequest.cargoId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cargo nao encontrado"));
-            usuariosEntity.setCargosEntity(cargo);
-        }
+        usuariosEntity.setCargo(usuariosRequest.cargoEnum());
 
         return this.usuariosRepository.save(usuariosEntity);
     }
 
     public UsuariosEntity atualizarStatusUsuario(Long id){
         UsuariosEntity usuario = this.buscarUsuarioPorId(id);
-        usuario.setStatus(usuario.getStatus().equals(true) ? false: true);
+        usuario.setStatus(usuario.getStatus().equals(EStatus.ATIVO) ? EStatus.INATIVO: EStatus.ATIVO);
         return this.usuariosRepository.save(usuario);
     }
     public UsuariosEntity atualizarUsuarioParcial(Long id, UsuariosRequest usuariosRequest) {
@@ -89,11 +77,9 @@ public class UsuariosService {
         if (usuariosRequest.nome() != null) usuariosEntity.setNome(usuariosRequest.nome());
         if (usuariosRequest.senha() != null) usuariosEntity.setSenha(usuariosRequest.senha());
 
-        if (usuariosRequest.cargoId() != null) {
+        if (usuariosRequest.cargoEnum() != null) {
             //procura o cargo antes de atualizar se nao lanca exeption
-            CargosEntity cargo = cargosRepository.findById(usuariosRequest.cargoId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cargo não encontrado"));
-            usuariosEntity.setCargosEntity(cargo);
+            usuariosEntity.setCargo(usuariosRequest.cargoEnum());
         }
 
         return this.usuariosRepository.save(usuariosEntity);
@@ -105,6 +91,7 @@ public class UsuariosService {
         //nao é deletado de fato o usuario, apenas preenche um campo de deleted_at e nao
         // ignora em outras consultas caso esteja preenchido esse campo
         usuariosEntity.setDeletedAt(new Timestamp(System.currentTimeMillis()));
+        usuariosEntity.setStatus(EStatus.INATIVO);
         this.usuariosRepository.save(usuariosEntity);  //lembrar de criar um status de ativo e inativo para usuario
     }
 

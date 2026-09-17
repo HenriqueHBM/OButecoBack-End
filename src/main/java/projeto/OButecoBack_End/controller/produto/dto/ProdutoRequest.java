@@ -2,9 +2,12 @@ package projeto.OButecoBack_End.controller.produto.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import projeto.OButecoBack_End.model.Enum.CategoriaEnum;
 import projeto.OButecoBack_End.model.Enum.EStatus;
+import projeto.OButecoBack_End.model.Enum.GrupoEnum;
 import projeto.OButecoBack_End.model.entity.produto.ProdutosEntity;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 public record ProdutoRequest(
@@ -16,12 +19,12 @@ public record ProdutoRequest(
         EStatus status,
 
         @NotNull(message = "Categoria é obrigatório")
-        Long categoriaId,
+        CategoriaEnum categoriaEnum,
 
         @NotNull(message = "Grupo é obrigatório")
-        Long grupoId,
+        GrupoEnum grupoEnum,
 
-        Double precoVenda,
+        BigDecimal precoVenda,
 
         String observacao
 ) {
@@ -30,8 +33,8 @@ public record ProdutoRequest(
                 produtosEntity.getId(),
                 produtosEntity.getNome(),
                 produtosEntity.getStatus(),
-                produtosEntity.getCategoria().getId(),
-                produtosEntity.getGrupo().getId(),
+                produtosEntity.getCategoriaEnum(),
+                produtosEntity.getGrupo(),
                 produtosEntity.getPrecoVenda(),
                 produtosEntity.getObservacao()
         );

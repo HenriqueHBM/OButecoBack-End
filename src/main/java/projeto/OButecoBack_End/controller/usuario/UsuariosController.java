@@ -47,7 +47,7 @@ public class UsuariosController {
         return new ResponseEntity<>(UsuariosResponse.de(usuariosEntity), HttpStatus.OK);
     }
 
-        @GetMapping()
+    @GetMapping()
     public ResponseEntity<List<UsuariosResponse>> listarUsuarios () {
         List<UsuariosResponse> usuarios = this.usuariosService.listarUsuarios()
                 .stream()
