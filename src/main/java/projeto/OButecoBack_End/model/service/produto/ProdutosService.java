@@ -29,7 +29,7 @@ public class ProdutosService {
         return this.produtosRepository.findByIdAndDeletedAtIsNull(id)
             .orElseThrow(
                     () -> {
-                        log.warn("Produto com esse id não encontrado: {}", id);
+                        log.warn("Produto não encontrado. ID: {}", id);
                         return new ResponseStatusException(HttpStatus.NOT_FOUND,
                                 "Produto não encontrado");
                     }
@@ -37,6 +37,10 @@ public class ProdutosService {
     }
 
     private void aplicarInsumos(ProdutosEntity produto, List<ProdutoRequest.InsumosRequest> itens){
+        log.info("Aplicando insumos ao produto. Produto: {}, Quantidade de insumos: {}",
+                produto.getId(),
+                itens != null ? itens.size() : 0);
+
         //limpa os insumos
         produto.getInsumos().clear();
 
@@ -50,10 +54,12 @@ public class ProdutosService {
         for(var item : itens){
             //valida repeticao de insumos para o mesmo produto
             if(!jaAdicionados.add(item.insumoId())){
+                log.warn("Insumo repetido na lista. Produto: {}, Insumo: {}", produto.getId(), item.insumoId());
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insumo repetido na lista: "+ item.insumoId());
             }
             //verifica se o insumo adicionado nao e o produto cadastrado (travando loop)
             if(produto.getId() != null && produto.getId().equals(item.insumoId())){
+                log.warn("Produto tentando utilizar a si próprio como insumo. Produto: {}", produto.getId());
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Produto e Insumos nao podem ser o mesmo");
             }
 

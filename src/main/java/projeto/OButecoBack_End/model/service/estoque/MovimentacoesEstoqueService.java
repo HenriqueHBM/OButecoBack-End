@@ -13,39 +13,50 @@ import projeto.OButecoBack_End.model.repository.estoque.*;
 import projeto.OButecoBack_End.model.repository.produto.*;
 import projeto.OButecoBack_End.model.repository.usuario.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import projeto.OButecoBack_End.model.service.usuario.UsuariosService;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
 @Service
 public class MovimentacoesEstoqueService {
+    private static final Logger log = LoggerFactory.getLogger(MovimentacoesEstoqueService.class);
+
+    private static final String TIPO_ENTRADA = "ENTRADA";
+    private static final String TIPO_SAIDA = "SAIDA";
+    private static final String TIPO_SAIDA_INSUMO = "SAIDA_INSUMO";
 
     private final MovimentacoesEstoqueRepository movimentacoesEstoqueRepository;
     private final EstoquesRepository estoquesRepository;
     private final ProdutosRepository produtosRepository;
-    private final UsuariosRepository usuariosRepository;
     private final InsumosProdutoRepository insumosProdutoRepository;
     private final ConversoesRepository conversoesRepository;
     private final EstoquesService estoquesService;
+    private final UsuariosService usuariosService;
 
-    public MovimentacoesEstoqueService(MovimentacoesEstoqueRepository movimentacoesEstoqueRepository, EstoquesRepository estoquesRepository, ProdutosRepository produtosRepository, UsuariosRepository usuariosRepository, InsumosProdutoRepository insumosProdutoRepository, ConversoesRepository conversoesRepository, EstoquesService estoquesService) {
+    public MovimentacoesEstoqueService(MovimentacoesEstoqueRepository movimentacoesEstoqueRepository, EstoquesRepository estoquesRepository, ProdutosRepository produtosRepository, InsumosProdutoRepository insumosProdutoRepository, ConversoesRepository conversoesRepository, EstoquesService estoquesService, UsuariosService usuariosService) {
         this.movimentacoesEstoqueRepository = movimentacoesEstoqueRepository;
         this.estoquesRepository = estoquesRepository;
         this.produtosRepository = produtosRepository;
-        this.usuariosRepository = usuariosRepository;
         this.insumosProdutoRepository = insumosProdutoRepository;
         this.conversoesRepository = conversoesRepository;
         this.estoquesService = estoquesService;
+        this.usuariosService = usuariosService;
     }
 
     @Transactional
     public MovimentacoesEstoqueEntity entrada(MovimentacoesEstoqueRequest movimentacoesEstoqueRequest) {
+        log.info("Iniciando entrada de estoque. Estoque: {}, Produto: {}, Quantidade: {}, Usuário: {}",
+                movimentacoesEstoqueRequest.fk_id_estoque(),
+                movimentacoesEstoqueRequest.fk_id_produto(),
+                movimentacoesEstoqueRequest.qtde(),
+                movimentacoesEstoqueRequest.fk_id_usuario());
+
         //Validacao de usuario e estoque
-        UsuariosEntity usuario = usuariosRepository.findByIdAndDeletedAtIsNull(movimentacoesEstoqueRequest.fk_id_usuario())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Usuário não encontrado com ID: " + movimentacoesEstoqueRequest.fk_id_usuario()
-                ));
+        UsuariosEntity usuario = usuariosService.buscarUsuarioPorId(movimentacoesEstoqueRequest.fk_id_usuario());
 
         //Caso nao exista estoque cria um novo
         EstoquesEntity estoque = estoquesRepository.findById(movimentacoesEstoqueRequest.fk_id_estoque())
@@ -79,24 +90,41 @@ public class MovimentacoesEstoqueService {
         estoque.setQntdEstoque(estoqueAnterior.add(qtdeConvertida));
         estoquesRepository.save(estoque);
 
+        log.info("Estoque atualizado após entrada. Estoque: {}, Quantidade anterior: {}, Quantidade adicionada: {}, Nova quantidade: {}",
+                estoque.getId(),
+                estoqueAnterior,
+                qtdeConvertida,
+                estoque.getQntdEstoque());
+
         //Registra a mov
-        return registrarMovimentacao(estoque, "ENTRADA", qtdeSemConversao, qtdeConvertida, usuario, movimentacoesEstoqueRequest, conversaoEntrada);
+        MovimentacoesEstoqueEntity movimentacao = registrarMovimentacao(
+                estoque,
+                TIPO_ENTRADA,
+                qtdeSemConversao,
+                qtdeConvertida,
+                usuario,
+                movimentacoesEstoqueRequest,
+                conversaoEntrada
+        );
+
+        log.info("Entrada registrada com sucesso. Movimentação: {}, Estoque: {}",
+                movimentacao.getId(),
+                estoque.getId());
+
+        return movimentacao;
     }
 
     @Transactional
     public MovimentacoesEstoqueEntity saida(MovimentacoesEstoqueRequest movimentacoesEstoqueRequest) {
-        //Validacao de usuario e estoque
-        UsuariosEntity usuario = usuariosRepository.findByIdAndDeletedAtIsNull(movimentacoesEstoqueRequest.fk_id_usuario())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Usuário não encontrado com ID: " + movimentacoesEstoqueRequest.fk_id_usuario()
-                ));
+        log.info("Iniciando saída de estoque. Estoque: {}, Quantidade: {}, Usuário: {}",
+                movimentacoesEstoqueRequest.fk_id_estoque(),
+                movimentacoesEstoqueRequest.qtde(),
+                movimentacoesEstoqueRequest.fk_id_usuario());
 
-        EstoquesEntity estoque = estoquesRepository.findById(movimentacoesEstoqueRequest.fk_id_estoque())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Estoque não encontrado com ID: " + movimentacoesEstoqueRequest.fk_id_estoque()
-                ));
+        //Validacao de usuario e estoque
+        UsuariosEntity usuario = usuariosService.buscarUsuarioPorId(movimentacoesEstoqueRequest.fk_id_usuario());
+
+        EstoquesEntity estoque = estoquesService.buscarEstoquePorId(movimentacoesEstoqueRequest.fk_id_estoque());
 
         //Calcular quantidade com conversão
         BigDecimal qtdeSemConversao = BigDecimal.valueOf(movimentacoesEstoqueRequest.qtde());
@@ -118,6 +146,11 @@ public class MovimentacoesEstoqueService {
 
         //Valida se tem a quantidade suficiente
         if (estoque.getQntdEstoque().compareTo(qtdeConvertida) < 0) {
+            log.warn("Estoque insuficiente. Estoque: {}, Disponível: {}, Solicitado: {}",
+                    estoque.getId(),
+                    estoque.getQntdEstoque(),
+                    qtdeConvertida);
+
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Quantidade insuficiente no estoque. Disponível: " + estoque.getQntdEstoque() +
@@ -128,35 +161,65 @@ public class MovimentacoesEstoqueService {
         estoque.setQntdEstoque(estoque.getQntdEstoque().subtract(qtdeConvertida));
         estoquesRepository.save(estoque);
 
+        log.info("Estoque atualizado após saída. Estoque: {}, Quantidade retirada: {}, Saldo: {}",
+                estoque.getId(),
+                qtdeConvertida,
+                estoque.getQntdEstoque());
+
         //Registra a mov
-        return registrarMovimentacao(estoque, "SAÍDA", qtdeSemConversao, qtdeConvertida, usuario, movimentacoesEstoqueRequest, conversaoSaida);
+        MovimentacoesEstoqueEntity movimentacao = registrarMovimentacao(
+                estoque,
+                TIPO_SAIDA,
+                qtdeSemConversao,
+                qtdeConvertida,
+                usuario,
+                movimentacoesEstoqueRequest,
+                conversaoSaida);
+
+        log.info(
+                "Saída registrada com sucesso. Movimentação: {}, Estoque: {}",
+                movimentacao.getId(),
+                estoque.getId()
+        );
+
+        return movimentacao;
     }
 
     @Transactional
     public void saidaInsumo(Long fk_id_produto, MovimentacoesEstoqueRequest movimentacoesEstoqueRequest) {
+        log.info("Iniciando saída de insumos. Produto: {}, Quantidade solicitada: {}, Usuário: {}",
+                fk_id_produto,
+                movimentacoesEstoqueRequest.qtde(),
+                movimentacoesEstoqueRequest.fk_id_usuario());
+
         //Valida usuario
-        UsuariosEntity usuario = usuariosRepository.findByIdAndDeletedAtIsNull(movimentacoesEstoqueRequest.fk_id_usuario())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Usuário não encontrado com ID: " + movimentacoesEstoqueRequest.fk_id_usuario()
-                ));
+        UsuariosEntity usuario = usuariosService.buscarUsuarioPorId(movimentacoesEstoqueRequest.fk_id_usuario());
 
         //Valida produto principal
         ProdutosEntity produto = produtosRepository.findByIdAndDeletedAtIsNull(fk_id_produto)
-                .orElseThrow(() -> new ResponseStatusException(
+                .orElseThrow(() -> {
+                    log.warn("Produto não encontrado para saída de insumos. ID: {}", fk_id_produto);
+
+                    return new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "Produto não encontrado com ID: " + fk_id_produto
-                ));
+                        "Produto não encontrado com ID: " + fk_id_produto);});
 
         //Busca insumos do produto principal
         List<InsumosProdutoEntity> insumos = insumosProdutoRepository.findAllByProdutosEntity(produto);
 
         if (insumos.isEmpty()) {
+            log.warn("Produto não possui insumos cadastrados. Produto: {}",
+                    produto.getId());
+
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Produto não possui insumos cadastrados"
             );
         }
+
+        log.info("Produto {} possui {} insumo(s) cadastrado(s)",
+                produto.getId(),
+                insumos.size());
 
         // Para cada insumo realiza a saída
         for (InsumosProdutoEntity insumo : insumos) {
@@ -181,6 +244,11 @@ public class MovimentacoesEstoqueService {
 
             //Valida a disponibilidade
             if (estoqueInsumo.getQntdEstoque().compareTo(quantidadeConvertida) < 0) {
+                log.warn("Estoque insuficiente para o insumo {}. Disponível: {}, Necessário: {}",
+                        insumo.getInsumos().getNome(),
+                        estoqueInsumo.getQntdEstoque(),
+                        quantidadeConvertida);
+
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
                         "Quantidade insuficiente do insumo: " + insumo.getInsumos().getNome()
@@ -198,7 +266,7 @@ public class MovimentacoesEstoqueService {
             MovimentacoesEstoqueEntity movimentacao = new MovimentacoesEstoqueEntity();
             movimentacao.setEstoqueEntity(estoqueInsumo);
             movimentacao.setUsuarioEntity(usuario);
-            movimentacao.setTipo("SAIDA_INSUMO");
+            movimentacao.setTipo(TIPO_SAIDA_INSUMO);
             movimentacao.setQuantidade(quantidadeNecessaria);
             movimentacao.setQtdeConversao(quantidadeConvertida);
 
@@ -216,16 +284,29 @@ public class MovimentacoesEstoqueService {
                             (movimentacoesEstoqueRequest.observacao() != null ? " - " + movimentacoesEstoqueRequest.observacao() : ""));
 
             movimentacoesEstoqueRepository.save(movimentacao);
+
+            log.info("Saída de insumo registrada. Produto principal: {}, Insumo: {}, Quantidade: {}",
+                    produto.getNome(),
+                    insumo.getInsumos().getNome(),
+                    quantidadeConvertida);
         }
+
+        log.info("Saída de insumos concluída com sucesso. Produto: {}",
+                produto.getNome());
     }
 
     //para editar reverte a mov antiga e aplica a nova
     @Transactional
     public MovimentacoesEstoqueEntity editarMovimentacao(Long id, MovimentacoesEstoqueRequest movimentacoesEstoqueRequest) {
+        log.info("Iniciando edição de movimentação. ID: {}", id);
+
         //Encontra a movimentação antiga
         MovimentacoesEstoqueEntity movimentacaoAntiga = movimentacoesEstoqueRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Movimentação não encontrada com ID: " + id));
+                .orElseThrow(() -> {
+                    log.warn("Movimentação não encontrada para edição. ID: {}", id);
+
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Movimentação não encontrada com ID: " + id);});
 
         EstoquesEntity estoque = movimentacaoAntiga.getEstoqueEntity();
 
@@ -236,11 +317,11 @@ public class MovimentacoesEstoqueService {
 
         if (mudouCampos) {
             //Reverte a movimentação antiga
-            if ("ENTRADA".equals(movimentacaoAntiga.getTipo())) {
+            if (TIPO_ENTRADA.equals(movimentacaoAntiga.getTipo())) {
                 estoque.setQntdEstoque(estoque.getQntdEstoque()
                                 .subtract(movimentacaoAntiga.getQtdeConversao()));
-            } else if ("SAIDA".equals(movimentacaoAntiga.getTipo())
-                    || "SAIDA_INSUMO".equals(movimentacaoAntiga.getTipo())) {
+            } else if (TIPO_SAIDA.equals(movimentacaoAntiga.getTipo())
+                    || TIPO_SAIDA_INSUMO.equals(movimentacaoAntiga.getTipo())) {
                 estoque.setQntdEstoque(estoque.getQntdEstoque()
                                 .add(movimentacaoAntiga.getQtdeConversao()));
             }
@@ -267,14 +348,14 @@ public class MovimentacoesEstoqueService {
             }
 
             //Valida quantidade suficiente para saída
-            if ("SAÍDA".equals(novoTipo) || "SAIDA_INSUMO".equals(novoTipo)) {
+            if (TIPO_SAIDA.equals(novoTipo) || TIPO_SAIDA_INSUMO.equals(novoTipo)) {
                 if (estoque.getQntdEstoque().compareTo(qtdeConvertida) < 0) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                             "Quantidade insuficiente no estoque. Disponível: " + estoque.getQntdEstoque()
                                     + ", Solicitado: " + qtdeConvertida);
                 }
                 estoque.setQntdEstoque(estoque.getQntdEstoque().subtract(qtdeConvertida));
-            } else if ("ENTRADA".equals(novoTipo)) {
+            } else if (TIPO_ENTRADA.equals(novoTipo)) {
                 estoque.setQntdEstoque(estoque.getQntdEstoque().add(qtdeConvertida));
             }
 
@@ -311,20 +392,38 @@ public class MovimentacoesEstoqueService {
         }
 
         estoquesRepository.save(estoque);
-        return movimentacoesEstoqueRepository.save(movimentacaoAntiga);
+
+        MovimentacoesEstoqueEntity movimentacaoEditada = movimentacoesEstoqueRepository.save(movimentacaoAntiga);
+
+        log.info("Movimentação editada com sucesso. ID: {}, Tipo: {}, Quantidade: {}",
+                movimentacaoEditada.getId(),
+                movimentacaoEditada.getTipo(),
+                movimentacaoEditada.getQuantidade());
+
+        return movimentacaoEditada;
     }
 
     @Transactional
     public void excluirMovimentacao(Long id) {
+        log.info("Iniciando exclusão da movimentação. ID: {}", id);
+
         //encontra a mov
         MovimentacoesEstoqueEntity movimentacao = movimentacoesEstoqueRepository.findById(id)
-                .orElseThrow( () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Movimentação não encontrada com ID: " + id));
+                .orElseThrow( () -> {
+                    log.warn("Movimentação não encontrada para exclusão. ID: {}", id);
+
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Movimentação não encontrada com ID: " + id);});
 
         EstoquesEntity estoque = movimentacao.getEstoqueEntity();
 
         //reverte a mov
-        if("ENTRADA".equals(movimentacao.getTipo())) {
+        log.info("Revertendo movimentação. ID: {}, Tipo: {}, Quantidade: {}",
+                movimentacao.getId(),
+                movimentacao.getTipo(),
+                movimentacao.getQtdeConversao());
+
+        if(TIPO_ENTRADA.equals(movimentacao.getTipo())) {
             BigDecimal novaQuantidade = estoque.getQntdEstoque().subtract(movimentacao.getQtdeConversao());
 
             if (novaQuantidade.compareTo(BigDecimal.ZERO) < 0) {
@@ -332,22 +431,37 @@ public class MovimentacoesEstoqueService {
                         "Não é possível excluir a movimentação, pois a quantidade atual do estoque é insuficiente.");}
 
             estoque.setQntdEstoque(novaQuantidade);
-        } else if ("SAÍDA".equals(movimentacao.getTipo()) || "SAIDA_INSUMO".equals(movimentacao.getTipo())) {
+        } else if (TIPO_SAIDA.equals(movimentacao.getTipo()) || TIPO_SAIDA_INSUMO.equals(movimentacao.getTipo())) {
             estoque.setQntdEstoque(estoque.getQntdEstoque().add(movimentacao.getQtdeConversao()));
         }
 
         estoquesRepository.save(estoque);
         movimentacoesEstoqueRepository.delete(movimentacao);
 
+        log.info("Movimentação excluída com sucesso. ID: {}",
+                id);
     }
 
     //metodos get
     public List<MovimentacoesEstoqueEntity> historicoPorEstoque(Long id) {
-        return movimentacoesEstoqueRepository.findByEstoqueEntityIdOrderByDataMovimentacaoDesc(id);
+        log.info("Buscando movimentações do estoque. ID: {}", id);
+
+        List<MovimentacoesEstoqueEntity> movimentacoes =
+                movimentacoesEstoqueRepository.findByEstoqueEntityIdOrderByDataMovimentacaoDesc(id);
+
+        log.info("Movimentações encontradas para o estoque {}: {}", id, movimentacoes.size());
+
+        return movimentacoes;
     }
 
     public List<MovimentacoesEstoqueEntity> historicoMovimentacoes(){
-        return movimentacoesEstoqueRepository.findAll();
+        log.info("Buscando todas as movimentações");
+
+        List<MovimentacoesEstoqueEntity> movimentacoes = movimentacoesEstoqueRepository.findAll();
+
+        log.info("Total de movimentações encontradas: {}", movimentacoes.size());
+
+        return movimentacoes;
     }
 
     //metodo auxiliar para conversao
