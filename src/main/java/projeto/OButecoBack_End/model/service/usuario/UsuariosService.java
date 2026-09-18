@@ -36,7 +36,7 @@ public class UsuariosService {
         usuariosEntity.setUsuario(usuariosRequest.usuario());
         usuariosEntity.setSenha(usuariosRequest.senha());
         usuariosEntity.setCargo(usuariosRequest.cargoEnum());
-
+        usuariosEntity.setStatus(EStatus.ATIVO);
         return this.usuariosRepository.save(usuariosEntity);
     }
 

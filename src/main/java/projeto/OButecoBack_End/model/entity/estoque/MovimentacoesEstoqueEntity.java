@@ -9,6 +9,7 @@ import projeto.OButecoBack_End.model.entity.conversao.ConversoesEntity;
 import projeto.OButecoBack_End.model.entity.produto.ProdutosEntity;
 import projeto.OButecoBack_End.model.entity.usuario.UsuariosEntity;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Getter
@@ -30,13 +31,16 @@ public class MovimentacoesEstoqueEntity {
     private String tipo;
 
     @Column(name = "qtde", nullable = false)
-    private double quantidade;
+    private BigDecimal quantidade;
+
+    @Column(name = "qtde_conversao")
+    private BigDecimal qtdeConversao;
 
     @Column(name = "valor_unitario", nullable = false)
-    private double valorUnitario;
+    private BigDecimal valorUnitario;
 
     @Column(name = "valor_total")
-    private double valorTotal;
+    private BigDecimal valorTotal;
 
     @ManyToOne
     @JoinColumn(name = "fk_id_usuario", nullable = false)

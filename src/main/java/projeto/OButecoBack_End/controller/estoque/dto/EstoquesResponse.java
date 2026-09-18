@@ -2,12 +2,13 @@ package projeto.OButecoBack_End.controller.estoque.dto;
 
 import projeto.OButecoBack_End.model.entity.estoque.EstoquesEntity;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 public record EstoquesResponse(
         Long id,
         Long fk_id_produto,
-        double qtdeEstoque,
+        BigDecimal qtdeEstoque,
         Long fk_id_conversao,
         String local,
         Instant dataCriacao,
@@ -17,7 +18,7 @@ public record EstoquesResponse(
         return new EstoquesResponse(
                 estoquesEntity.getId(),
                 estoquesEntity.getProdutosEntity().getId(),
-                estoquesEntity.getQtdeEstoque(),
+                estoquesEntity.getQntdEstoque(),
                 estoquesEntity.getConversoesEntity().getId(),
                 estoquesEntity.getLocal(),
                 estoquesEntity.getDataCriacao(),

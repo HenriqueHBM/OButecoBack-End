@@ -7,5 +7,5 @@ import projeto.OButecoBack_End.model.entity.produto.ProdutosEntity;
 import java.util.Optional;
 
 public interface EstoquesRepository extends JpaRepository<EstoquesEntity, Long> {
-    Optional<EstoquesEntity> findByProdutoEntity(ProdutosEntity produto);
+    Optional<EstoquesEntity> findByProdutosEntity(ProdutosEntity produto);
 }

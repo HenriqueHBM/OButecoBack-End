@@ -13,6 +13,9 @@ import projeto.OButecoBack_End.model.repository.estoque.ConversoesRepository;
 import projeto.OButecoBack_End.model.repository.estoque.EstoquesRepository;
 import projeto.OButecoBack_End.model.repository.produto.ProdutosRepository;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 @Service
 public class EstoquesService {
 
@@ -25,14 +28,6 @@ public class EstoquesService {
         this.produtosRepository = produtosRepository;
         this.conversoesRepository = conversoesRepository;
     }
-
-    //TO-DO
-    //buscarPorId check
-    //salvar check
-    //atualizar
-    //atualizarparcial
-    //delete
-    //listar
 
     public EstoquesEntity buscarEstoquePorId(Long id){
         return this.estoquesRepository.findById(id).orElseThrow(
@@ -56,35 +51,16 @@ public class EstoquesService {
         EstoquesEntity estoquesEntity = new EstoquesEntity();
 
         estoquesEntity.setProdutosEntity(produto);
-        estoquesEntity.setQtdeEstoque(estoquesRequest.qtdeEstoque());
+        estoquesEntity.setQntdEstoque(BigDecimal.valueOf(estoquesRequest.qtdeEstoque()));
         estoquesEntity.setConversoesEntity(conversao);
         estoquesEntity.setLocal(estoquesRequest.local());
 
         return estoquesRepository.save(estoquesEntity);
     }
 
-//    @Transactional
-//    public EstoquesEntity atualizarEstoque(Long id, EstoquesRequest estoquesRequest){
-//        ProdutosEntity produto = produtosRepository.findById(estoquesRequest.fk_id_produto()).orElseThrow(
-//                () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-//                        "Produto nao encontrado com id.")
-//        );
-//
-//        ConversoesEntity conversao = conversoesRepository.findById(estoquesRequest.fk_id_conversao()).orElseThrow(
-//                () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-//                        "Conversao nao encontrada com id")
-//        );
-//
-//        EstoquesEntity estoquesEntity = buscarEstoquePorId(id);
-//
-//        estoquesEntity.setProdutosEntity(produto);
-//        estoquesEntity.setQtdeEstoque(estoquesRequest.qtdeEstoque());
-//        estoquesEntity.setConversoesEntity(conversao);
-//        estoquesEntity.setLocal(estoquesRequest.local());
-//
-//
-//        return this.estoquesRepository.save(estoquesEntity);
-//    }
+    public List<EstoquesEntity> listarEstoques() {
+        return estoquesRepository.findAll();
+    }
 
 
 }

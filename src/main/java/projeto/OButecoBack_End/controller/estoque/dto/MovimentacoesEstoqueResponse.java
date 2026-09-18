@@ -2,15 +2,16 @@ package projeto.OButecoBack_End.controller.estoque.dto;
 
 import projeto.OButecoBack_End.model.entity.estoque.MovimentacoesEstoqueEntity;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 public record MovimentacoesEstoqueResponse(
         Long id,
         Long fk_id_estoque,
         String tipo,
-        double qtde,
-        double valorUnitario,
-        double valorTotal,
+        BigDecimal qtde,
+        BigDecimal valorUnitario,
+        BigDecimal valorTotal,
         Long fk_id_usuario,
         Long fk_id_conversao,
         Long fk_id_produto,
@@ -22,7 +23,7 @@ public record MovimentacoesEstoqueResponse(
                 entity.getId(),
                 entity.getEstoqueEntity().getId(),
                 entity.getTipo(),
-                entity.getQtde(),
+                entity.getQuantidade(),
                 entity.getValorUnitario(),
                 entity.getValorTotal(),
                 entity.getUsuarioEntity().getId(),
