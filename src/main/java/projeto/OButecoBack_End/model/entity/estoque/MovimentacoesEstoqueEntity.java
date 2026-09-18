@@ -30,13 +30,16 @@ public class MovimentacoesEstoqueEntity {
     @Column(name = "tipo", nullable = false)
     private String tipo;
 
-    @Column(name = "qtde", precision = 10, scale = 2, nullable = false)
+    @Column(name = "qtde", nullable = false)
     private BigDecimal quantidade;
 
-    @Column(name = "valor_unitario", precision = 10, scale = 2, nullable = false)
+    @Column(name = "qtde_conversao")
+    private BigDecimal qtdeConversao;
+
+    @Column(name = "valor_unitario", nullable = false)
     private BigDecimal valorUnitario;
 
-    @Column(name = "valor_total", precision = 10, scale = 2)
+    @Column(name = "valor_total")
     private BigDecimal valorTotal;
 
     @ManyToOne
@@ -53,9 +56,6 @@ public class MovimentacoesEstoqueEntity {
 
     @Column(name = "observacao", nullable = true)
     private String observacao;
-
-    @Column(name = "qtde_conversao", precision = 1, scale = 2, nullable = true)
-    private BigDecimal qtdeConversao;
 
     @ManyToOne
     @JoinColumn(name = "fk_id_produto")

@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @ToString
@@ -21,4 +23,7 @@ public class ConversoesEntity {
 
     @Column(name = "nomenclatura")
     private String nomenclatura;
+
+    @Column(name = "fator_base", precision = 10, scale = 4)
+    private BigDecimal fatorBase;
 }
