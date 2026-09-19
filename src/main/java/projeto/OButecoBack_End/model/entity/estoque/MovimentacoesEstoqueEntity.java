@@ -23,7 +23,7 @@ public class MovimentacoesEstoqueEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_id_estoque", nullable = false)
     private EstoquesEntity estoqueEntity;
 
