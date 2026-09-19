@@ -8,6 +8,9 @@ import projeto.OButecoBack_End.controller.estoque.dto.EstoquesRequest;
 import projeto.OButecoBack_End.controller.estoque.dto.EstoquesResponse;
 import projeto.OButecoBack_End.controller.estoque.dto.MovimentacoesEstoqueRequest;
 import projeto.OButecoBack_End.controller.estoque.dto.MovimentacoesEstoqueResponse;
+import projeto.OButecoBack_End.controller.usuario.dto.UsuariosResponse;
+import projeto.OButecoBack_End.model.entity.estoque.EstoquesEntity;
+import projeto.OButecoBack_End.model.entity.usuario.UsuariosEntity;
 import projeto.OButecoBack_End.model.service.estoque.*;
 
 import org.slf4j.Logger;
@@ -61,6 +64,12 @@ public class EstoquesController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(EstoquesResponse.de(criacao));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<EstoquesResponse> buscarPorId (@PathVariable Long id) {
+        EstoquesEntity estoque = this.estoqueService.buscarEstoquePorId(id);
+        return new ResponseEntity<>(EstoquesResponse.de(estoque), HttpStatus.OK);
     }
 
     //------------------------------------Movimentacoes------------------------------------//
