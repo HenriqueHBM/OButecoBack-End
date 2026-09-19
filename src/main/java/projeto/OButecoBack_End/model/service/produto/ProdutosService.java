@@ -25,7 +25,7 @@ public class ProdutosService {
     private final ProdutosRepository produtosRepository;
 
     //FIND Produto
-    private ProdutosEntity buscarProdutoPorId(Long id){
+    public ProdutosEntity buscarProdutoPorId(Long id){
         return this.produtosRepository.findByIdAndDeletedAtIsNull(id)
             .orElseThrow(
                     () -> {
