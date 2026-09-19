@@ -5,8 +5,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import projeto.OButecoBack_End.controller.estoque.dto.EstoquesResponse;
 import projeto.OButecoBack_End.controller.produto.dto.ProdutoRequest;
 import projeto.OButecoBack_End.controller.produto.dto.ProdutoResponse;
+import projeto.OButecoBack_End.model.entity.estoque.EstoquesEntity;
 import projeto.OButecoBack_End.model.entity.produto.ProdutosEntity;
 import projeto.OButecoBack_End.model.service.produto.ProdutosService;
 
@@ -114,5 +116,13 @@ public class ProdutosController {
         log.info("Produtos consultados com sucesso. Total: {}", produtos.size());
 
         return new ResponseEntity<>(produtos, HttpStatus.OK);
+    }
+
+
+    //FIND BY ID
+    @GetMapping("/{id}")
+    public ResponseEntity<ProdutoResponse> buscarPorId (@PathVariable Long id) {
+        ProdutosEntity produto = this.produtosService.buscarProdutoPorId(id);
+        return new ResponseEntity<>(ProdutoResponse.de(produto), HttpStatus.OK);
     }
 }
