@@ -21,7 +21,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/estoques")
-@CrossOrigin("*")
+@CrossOrigin("http://localhost:4200")
 public class EstoquesController {
 
     private static final Logger log = LoggerFactory.getLogger(EstoquesController.class);

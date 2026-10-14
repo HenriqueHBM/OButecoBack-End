@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/login")
-@CrossOrigin("*")
+@CrossOrigin("http://localhost:4200")
 public class LoginController {
     private static final Logger log = LoggerFactory.getLogger(LoginController.class);
 
