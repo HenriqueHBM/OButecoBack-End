@@ -1,4 +1,4 @@
-package projeto.obuteco.model.Enum;
+package projeto.obuteco.model.enums;
 
 public enum EStatus {
     ATIVO,

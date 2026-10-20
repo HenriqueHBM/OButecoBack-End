@@ -6,8 +6,8 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import projeto.obuteco.model.Enum.CargoEnum;
-import projeto.obuteco.model.Enum.EStatus;
+import projeto.obuteco.model.enums.CargoEnum;
+import projeto.obuteco.model.enums.EStatus;
 
 import java.sql.Timestamp;
 

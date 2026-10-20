@@ -1,7 +1,7 @@
 package projeto.obuteco.controller.usuario.dto;
 
 import jakarta.validation.constraints.*;
-import projeto.obuteco.model.Enum.CargoEnum;
+import projeto.obuteco.model.enums.CargoEnum;
 import projeto.obuteco.model.entity.usuario.UsuariosEntity;
 
 import java.sql.Timestamp;

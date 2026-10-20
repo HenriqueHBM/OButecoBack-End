@@ -6,10 +6,10 @@ import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import projeto.obuteco.model.Enum.CategoriaEnum;
-import projeto.obuteco.model.Enum.GrupoEnum;
+import projeto.obuteco.model.enums.CategoriaEnum;
+import projeto.obuteco.model.enums.GrupoEnum;
 import projeto.obuteco.model.entity.estoque.EstoquesEntity;
-import projeto.obuteco.model.Enum.EStatus;
+import projeto.obuteco.model.enums.EStatus;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;

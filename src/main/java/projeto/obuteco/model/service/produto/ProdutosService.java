@@ -7,8 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import projeto.obuteco.controller.produto.dto.ProdutoRequest;
-import projeto.obuteco.model.Enum.CategoriaEnum;
-import projeto.obuteco.model.Enum.EStatus;
+import projeto.obuteco.model.enums.CategoriaEnum;
+import projeto.obuteco.model.enums.EStatus;
 import projeto.obuteco.model.entity.produto.InsumosProdutoEntity;
 import projeto.obuteco.model.entity.produto.ProdutosEntity;
 import projeto.obuteco.model.repository.produto.ProdutosRepository;
@@ -23,6 +23,8 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ProdutosService {
     private final ProdutosRepository produtosRepository;
+
+    private final String msngProdutoInsumoSemInsumo = "Produto com categoria de insumos precisa de ao menos um insumo";
 
     //FIND Produto
     public ProdutosEntity buscarProdutoPorId(Long id){
@@ -107,7 +109,7 @@ public class ProdutosService {
         //caso for da categoria de "PRODUTO_INSUMOS"
         if(request.categoriaEnum() == CategoriaEnum.PRODUTO_INSUMOS){
             if(request.insumos() == null || request.insumos().isEmpty()){
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Produto com categoria de insumos precisa de ao menos um insumo");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msngProdutoInsumoSemInsumo);
             }
             this.aplicarInsumos(produto, request.insumos());
         }
@@ -131,7 +133,7 @@ public class ProdutosService {
         //caso for da categoria de "PRODUTO_INSUMOS"
         if(request.categoriaEnum() == CategoriaEnum.PRODUTO_INSUMOS){
             if(request.insumos() == null || request.insumos().isEmpty()){
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Produto com categoria de insumos precisa de ao menos um insumo");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msngProdutoInsumoSemInsumo);
             }
             this.aplicarInsumos(produto, request.insumos());
         }else{
@@ -199,7 +201,7 @@ public class ProdutosService {
         if (produto.getCategoriaEnum() == CategoriaEnum.PRODUTO_INSUMOS
                 && produto.getInsumos().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Produto com categoria de insumos precisa de ao menos um insumo");
+                    msngProdutoInsumoSemInsumo);
         }
 
         log.info("Dado do produto atualizado: {}", produto);

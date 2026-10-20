@@ -9,9 +9,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
-import projeto.obuteco.model.Enum.CategoriaEnum;
-import projeto.obuteco.model.Enum.EStatus;
-import projeto.obuteco.model.Enum.GrupoEnum;
+import projeto.obuteco.model.enums.CategoriaEnum;
+import projeto.obuteco.model.enums.EStatus;
+import projeto.obuteco.model.enums.GrupoEnum;
 import projeto.obuteco.model.entity.produto.ProdutosEntity;
 import projeto.obuteco.model.repository.produto.ProdutosRepository;
 
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 // @SpringBootTest
 @ExtendWith(MockitoExtension.class)
 
-public class ProdutoServiceTest {
+class ProdutoServiceTest {
     @Mock
     private ProdutosRepository produtosRepository;
 
