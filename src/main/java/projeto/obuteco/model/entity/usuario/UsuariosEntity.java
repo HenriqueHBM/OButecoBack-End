@@ -49,4 +49,14 @@ public class UsuariosEntity {
 
     @Column(name = "deleted_at", nullable = true)
     private Timestamp deletedAt;
+
+    public UsuariosEntity(){}
+
+    public UsuariosEntity(Long id, String nome, String usuario, String senha, EStatus status) {
+        this.id = id;
+        this.nome = nome;
+        this.usuario = usuario;
+        this.senha = senha;
+        this.status = status;
+    }
 }
