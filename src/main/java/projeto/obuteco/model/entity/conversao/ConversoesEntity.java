@@ -27,7 +27,7 @@ public class ConversoesEntity {
     @Column(name = "fator_base", precision = 10, scale = 4)
     private BigDecimal fatorBase;
 
-    public ConversoesEntity(){}
+    public ConversoesEntity() {}
 
     public ConversoesEntity(Long id, String nome, String nomenclatura, BigDecimal fatorBase) {
         this.id = id;
