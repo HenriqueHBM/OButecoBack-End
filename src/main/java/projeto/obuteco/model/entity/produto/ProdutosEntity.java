@@ -51,7 +51,7 @@ public class ProdutosEntity {
     private String observacao;
 
     @OneToMany(mappedBy = "produtosEntity", cascade = CascadeType.ALL)
-    private List<EstoquesEntity> EstoquesEntity = new ArrayList<>();
+    private List<EstoquesEntity> estoquesEntity = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at")

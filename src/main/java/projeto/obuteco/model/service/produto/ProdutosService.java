@@ -24,7 +24,7 @@ import java.util.Set;
 public class ProdutosService {
     private final ProdutosRepository produtosRepository;
 
-    private final String msngProdutoInsumoSemInsumo = "Produto com categoria de insumos precisa de ao menos um insumo";
+    public static final String msngProdutoInsumoSemInsumo = "Produto com categoria de insumos precisa de ao menos um insumo";
 
     //FIND Produto
     public ProdutosEntity buscarProdutoPorId(Long id){
@@ -38,7 +38,7 @@ public class ProdutosService {
             );
     }
 
-    private void aplicarInsumos(ProdutosEntity produto, List<ProdutoRequest.InsumosRequest> itens){
+     void aplicarInsumos(ProdutosEntity produto, List<ProdutoRequest.InsumosRequest> itens){
         log.info("Aplicando insumos ao produto. Produto: {}, Quantidade de insumos: {}",
                 produto.getId(),
                 itens != null ? itens.size() : 0);

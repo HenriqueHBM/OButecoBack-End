@@ -41,11 +41,11 @@ public class UsuariosEntity {
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = true)
-    private Timestamp created_at;
+    private Timestamp createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = true)
-    private Timestamp updated_at;
+    private Timestamp updatedAt;
 
     @Column(name = "deleted_at", nullable = true)
     private Timestamp deletedAt;
