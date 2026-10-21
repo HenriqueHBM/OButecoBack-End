@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 @Service
 public class MovimentacoesEstoqueService {
@@ -46,233 +47,88 @@ public class MovimentacoesEstoqueService {
         this.usuariosService = usuariosService;
     }
 
+    // ===================== OPERAÇÕES PRINCIPAIS =====================
+
     @Transactional
-    public MovimentacoesEstoqueEntity entrada(MovimentacoesEstoqueRequest movimentacoesEstoqueRequest) {
+    public MovimentacoesEstoqueEntity entrada(MovimentacoesEstoqueRequest request) {
         log.info("Iniciando entrada de estoque. Estoque: {}, Produto: {}, Quantidade: {}, Usuário: {}",
-                movimentacoesEstoqueRequest.fk_id_estoque(),
-                movimentacoesEstoqueRequest.fk_id_produto(),
-                movimentacoesEstoqueRequest.qtde(),
-                movimentacoesEstoqueRequest.fk_id_usuario());
+                request.fk_id_estoque(),
+                request.fk_id_produto(),
+                request.qtde(),
+                request.fk_id_usuario());
 
-        //Validacao de usuario e estoque
-        UsuariosEntity usuario = usuariosService.buscarUsuarioPorId(movimentacoesEstoqueRequest.fk_id_usuario());
-
-        //Caso nao exista estoque cria um novo
-        EstoquesEntity estoque = estoquesRepository.findById(movimentacoesEstoqueRequest.fk_id_estoque())
-                .orElseGet(() -> {
-                    if (movimentacoesEstoqueRequest.fk_id_produto() != null) {
-                        EstoquesRequest estoqueRequest = new EstoquesRequest(
-                                movimentacoesEstoqueRequest.fk_id_produto(),
-                                0.0,  // Começa vazio
-                                movimentacoesEstoqueRequest.fk_id_conversao(),
-                                movimentacoesEstoqueRequest.local()
-                        );
-                        return estoquesService.salvarEstoque(estoqueRequest);
-                    }
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Estoque não encontrado");
-                });
-
-        //Calcular quantidade com conversão
-        BigDecimal qtdeSemConversao = BigDecimal.valueOf(movimentacoesEstoqueRequest.qtde());
-        BigDecimal qtdeConvertida = qtdeSemConversao;
-
-        ConversoesEntity conversaoEntrada = estoquesService.buscarConversaoPorId(movimentacoesEstoqueRequest.fk_id_conversao());
-        ConversoesEntity conversoesEstoque = estoque.getConversoesEntity();
-
-        if (!conversaoEntrada.getId().equals(conversoesEstoque.getId())) {
-            qtdeConvertida = converterQuantidade(qtdeSemConversao, conversaoEntrada, conversoesEstoque);
-        }
-
-        //Atualiza o estoque
-        BigDecimal estoqueAnterior = estoque.getQntdEstoque();
-        estoque.setQntdEstoque(estoqueAnterior.add(qtdeConvertida));
-        estoquesRepository.save(estoque);
-
-        log.info("Estoque atualizado após entrada. Estoque: {}, Quantidade anterior: {}, Quantidade adicionada: {}, Nova quantidade: {}",
-                estoque.getId(),
-                estoqueAnterior,
-                qtdeConvertida,
-                estoque.getQntdEstoque());
-
-        //Registra a mov
-        MovimentacoesEstoqueEntity movimentacao = registrarMovimentacao(
-                estoque,
-                TIPO_ENTRADA,
-                qtdeSemConversao,
-                qtdeConvertida,
-                usuario,
-                movimentacoesEstoqueRequest,
-                conversaoEntrada
-        );
-
-        log.info("Entrada registrada com sucesso. Movimentação: {}, Estoque: {}",
-                movimentacao.getId(),
-                estoque.getId());
-
-        return movimentacao;
+        return movimentar(TIPO_ENTRADA, request, () ->
+                estoquesRepository.findById(request.fk_id_estoque())
+                        .orElseGet(() -> criarEstoqueSeProdutoInformado(request)));
     }
 
     @Transactional
-    public MovimentacoesEstoqueEntity saida(MovimentacoesEstoqueRequest movimentacoesEstoqueRequest) {
+    public MovimentacoesEstoqueEntity saida(MovimentacoesEstoqueRequest request) {
         log.info("Iniciando saída de estoque. Estoque: {}, Quantidade: {}, Usuário: {}",
-                movimentacoesEstoqueRequest.fk_id_estoque(),
-                movimentacoesEstoqueRequest.qtde(),
-                movimentacoesEstoqueRequest.fk_id_usuario());
+                request.fk_id_estoque(),
+                request.qtde(),
+                request.fk_id_usuario());
 
-        //Validacao de usuario e estoque
-        UsuariosEntity usuario = usuariosService.buscarUsuarioPorId(movimentacoesEstoqueRequest.fk_id_usuario());
-
-        EstoquesEntity estoque = estoquesService.buscarEstoquePorId(movimentacoesEstoqueRequest.fk_id_estoque());
-
-        //Calcular quantidade com conversão
-        BigDecimal qtdeSemConversao = BigDecimal.valueOf(movimentacoesEstoqueRequest.qtde());
-        BigDecimal qtdeConvertida = qtdeSemConversao;
-
-        ConversoesEntity conversaoSaida = estoquesService.buscarConversaoPorId(movimentacoesEstoqueRequest.fk_id_conversao());
-        ConversoesEntity conversoesEstoque = estoque.getConversoesEntity();
-
-        if (!conversaoSaida.getId().equals(conversoesEstoque.getId())) {
-            qtdeConvertida = converterQuantidade(
-                    qtdeSemConversao,
-                    conversaoSaida,
-                    conversoesEstoque
-            );
-        }
-
-        //Valida se tem a quantidade suficiente
-        if (estoque.getQntdEstoque().compareTo(qtdeConvertida) < 0) {
-            log.warn("Estoque insuficiente. Estoque: {}, Disponível: {}, Solicitado: {}",
-                    estoque.getId(),
-                    estoque.getQntdEstoque(),
-                    qtdeConvertida);
-
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Quantidade insuficiente no estoque. Disponível: " + estoque.getQntdEstoque() +
-                            ", Solicitado: " + qtdeConvertida);
-        }
-
-        //Atualiza o estoque
-        estoque.setQntdEstoque(estoque.getQntdEstoque().subtract(qtdeConvertida));
-        estoquesRepository.save(estoque);
-
-        log.info("Estoque atualizado após saída. Estoque: {}, Quantidade retirada: {}, Saldo: {}",
-                estoque.getId(),
-                qtdeConvertida,
-                estoque.getQntdEstoque());
-
-        //Registra a mov
-        MovimentacoesEstoqueEntity movimentacao = registrarMovimentacao(
-                estoque,
-                TIPO_SAIDA,
-                qtdeSemConversao,
-                qtdeConvertida,
-                usuario,
-                movimentacoesEstoqueRequest,
-                conversaoSaida);
-
-        log.info(
-                "Saída registrada com sucesso. Movimentação: {}, Estoque: {}",
-                movimentacao.getId(),
-                estoque.getId()
-        );
-
-        return movimentacao;
+        return movimentar(TIPO_SAIDA, request, () ->
+                estoquesService.buscarEstoquePorId(request.fk_id_estoque()));
     }
 
     @Transactional
-    public void saidaInsumo(Long idProduto, MovimentacoesEstoqueRequest movimentacoesEstoqueRequest) {
+    public void saidaInsumo(Long idProduto, MovimentacoesEstoqueRequest request) {
         log.info("Iniciando saída de insumos. Produto: {}, Quantidade solicitada: {}, Usuário: {}",
                 idProduto,
-                movimentacoesEstoqueRequest.qtde(),
-                movimentacoesEstoqueRequest.fk_id_usuario());
+                request.qtde(),
+                request.fk_id_usuario());
 
-        //Valida usuario
-        UsuariosEntity usuario = usuariosService.buscarUsuarioPorId(movimentacoesEstoqueRequest.fk_id_usuario());
+        UsuariosEntity usuario = usuariosService.buscarUsuarioPorId(request.fk_id_usuario());
+        ProdutosEntity produto = produtosService.buscarProdutoPorId(request.fk_id_produto());
 
-        //Valida produto principal
-        ProdutosEntity produto = produtosService.buscarProdutoPorId(movimentacoesEstoqueRequest.fk_id_produto());
-
-        //Busca insumos do produto principal
         List<InsumosProdutoEntity> insumos = insumosProdutoRepository.findAllByProdutosEntity(produto);
 
         if (insumos.isEmpty()) {
-            log.warn("Produto não possui insumos cadastrados. Produto: {}",
-                    produto.getId());
-
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Produto não possui insumos cadastrados"
-            );
+            log.warn("Produto não possui insumos cadastrados. Produto: {}", produto.getId());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Produto não possui insumos cadastrados");
         }
 
-        log.info("Produto {} possui {} insumo(s) cadastrado(s)",
-                produto.getId(),
-                insumos.size());
+        log.info("Produto {} possui {} insumo(s) cadastrado(s)", produto.getId(), insumos.size());
 
-        // Para cada insumo realiza a saída
         for (InsumosProdutoEntity insumo : insumos) {
-            EstoquesEntity estoqueInsumo =
-                    estoquesRepository.findByProdutosEntity(insumo.getInsumos())
-                            .orElseThrow(() -> new ResponseStatusException(
-                                    HttpStatus.NOT_FOUND,
-                                    "Estoque não encontrado para insumo: "
-                                            + insumo.getInsumos().getNome()
-                            ));
+            EstoquesEntity estoqueInsumo = estoquesRepository.findByProdutosEntity(insumo.getInsumos())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Estoque não encontrado para insumo: " + insumo.getInsumos().getNome()));
 
-            // Quantidade necessária do insumo para produzir a quantidade solicitada
             // Ex.: 100g de queijo por pizza × 2 pizzas = 200g
             BigDecimal quantidadeNecessaria =
-                    insumo.getQtde().multiply(BigDecimal.valueOf(movimentacoesEstoqueRequest.qtde()));
+                    insumo.getQtde().multiply(BigDecimal.valueOf(request.qtde()));
 
             BigDecimal quantidadeConvertida = converterQuantidade(
                     quantidadeNecessaria,
                     insumo.getConversoesEntity(),
-                    estoqueInsumo.getConversoesEntity()
-            );
+                    estoqueInsumo.getConversoesEntity());
 
-            //Valida a disponibilidade
-            if (estoqueInsumo.getQntdEstoque().compareTo(quantidadeConvertida) < 0) {
-                log.warn("Estoque insuficiente para o insumo {}. Disponível: {}, Necessário: {}",
-                        insumo.getInsumos().getNome(),
-                        estoqueInsumo.getQntdEstoque(),
-                        quantidadeConvertida);
+            validarSaldoSuficiente(
+                    estoqueInsumo,
+                    quantidadeConvertida,
+                    "Quantidade insuficiente do insumo: " + insumo.getInsumos().getNome(),
+                    estoqueInsumo.getConversoesEntity().getNomenclatura());
 
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Quantidade insuficiente do insumo: " + insumo.getInsumos().getNome()
-                                + ". Disponível: " + estoqueInsumo.getQntdEstoque() + " " + estoqueInsumo.getConversoesEntity().getNomenclatura()
-                                + ", Necessário: " + quantidadeConvertida + " " + estoqueInsumo.getConversoesEntity().getNomenclatura());
-            }
-
-            //Retira a quantidade do estoque
-            estoqueInsumo.setQntdEstoque(
-                    estoqueInsumo.getQntdEstoque().subtract(quantidadeConvertida));
-
+            estoqueInsumo.setQntdEstoque(estoqueInsumo.getQntdEstoque().subtract(quantidadeConvertida));
             estoquesRepository.save(estoqueInsumo);
 
-            //Registra a mov
-            MovimentacoesEstoqueEntity movimentacao = new MovimentacoesEstoqueEntity();
-            movimentacao.setEstoqueEntity(estoqueInsumo);
-            movimentacao.setUsuarioEntity(usuario);
-            movimentacao.setTipo(TIPO_SAIDA_INSUMO);
-            movimentacao.setQuantidade(quantidadeNecessaria);
-            movimentacao.setQtdeConversao(quantidadeConvertida);
+            String observacao = "Saída de insumo para: " + produto.getNome() +
+                    " (Quantidade do produto: " + request.qtde() + ")" +
+                    (request.observacao() != null ? " - " + request.observacao() : "");
 
-            BigDecimal valorUnitario = insumo.getInsumos().getPrecoVenda();
-            BigDecimal valorTotal = quantidadeConvertida.multiply(valorUnitario);
-
-            movimentacao.setValorUnitario(valorUnitario);
-            movimentacao.setValorTotal(valorTotal);
-
-            movimentacao.setConversoesEntity(insumo.getConversoesEntity());
-            movimentacao.setProdutosEntity(insumo.getInsumos());
-            movimentacao.setObservacao(
-                    "Saída de insumo para: " + produto.getNome() +
-                            " (Quantidade do produto: " + movimentacoesEstoqueRequest.qtde() + ")" +
-                            (movimentacoesEstoqueRequest.observacao() != null ? " - " + movimentacoesEstoqueRequest.observacao() : ""));
-
-            movimentacoesEstoqueRepository.save(movimentacao);
+            registrarMovimentacao(
+                    estoqueInsumo,
+                    TIPO_SAIDA_INSUMO,
+                    quantidadeNecessaria,
+                    quantidadeConvertida,
+                    usuario,
+                    insumo.getInsumos().getPrecoVenda(),
+                    observacao,
+                    insumo.getConversoesEntity());
 
             log.info("Saída de insumo registrada. Produto principal: {}, Insumo: {}, Quantidade: {}",
                     produto.getNome(),
@@ -280,11 +136,10 @@ public class MovimentacoesEstoqueService {
                     quantidadeConvertida);
         }
 
-        log.info("Saída de insumos concluída com sucesso. Produto: {}",
-                produto.getNome());
+        log.info("Saída de insumos concluída com sucesso. Produto: {}", produto.getNome());
     }
 
-    //para editar reverte a mov antiga e aplica a nova
+    // para editar reverte a mov antiga e aplica a nova
     @Transactional
     public MovimentacoesEstoqueEntity editarMovimentacao(Long id, MovimentacoesEstoqueRequest request) {
         log.info("Iniciando edição de movimentação. ID: {}", id);
@@ -295,6 +150,7 @@ public class MovimentacoesEstoqueService {
         if (afetaEstoque(request)) {
             reverterMovimentacao(estoque, movimentacao);
             reaplicarMovimentacao(estoque, movimentacao, request);
+            estoquesRepository.save(estoque);
         } else if (request.valorUnitario() != null) {
             atualizarValores(movimentacao, request.valorUnitario(), movimentacao.getQtdeConversao());
         }
@@ -303,7 +159,6 @@ public class MovimentacoesEstoqueService {
             movimentacao.setObservacao(request.observacao());
         }
 
-        estoquesRepository.save(estoque);
         MovimentacoesEstoqueEntity movimentacaoEditada = movimentacoesEstoqueRepository.save(movimentacao);
 
         log.info("Movimentação editada com sucesso. ID: {}, Tipo: {}, Quantidade: {}",
@@ -334,7 +189,8 @@ public class MovimentacoesEstoqueService {
         log.info("Movimentação excluída com sucesso. ID: {}", id);
     }
 
-    //metodos get
+    // ===================== CONSULTAS =====================
+
     public List<MovimentacoesEstoqueEntity> historicoPorEstoque(Long id) {
         log.info("Buscando movimentações do estoque. ID: {}", id);
 
@@ -346,7 +202,7 @@ public class MovimentacoesEstoqueService {
         return movimentacoes;
     }
 
-    public List<MovimentacoesEstoqueEntity> historicoMovimentacoes(){
+    public List<MovimentacoesEstoqueEntity> historicoMovimentacoes() {
         log.info("Buscando todas as movimentações");
 
         List<MovimentacoesEstoqueEntity> movimentacoes = movimentacoesEstoqueRepository.findAll();
@@ -356,21 +212,23 @@ public class MovimentacoesEstoqueService {
         return movimentacoes;
     }
 
-    //metodo auxiliares
-    public BigDecimal converterQuantidade(
-            BigDecimal quantidade,
-            ConversoesEntity origem,
-            ConversoesEntity destino) {
+    public MovimentacoesEstoqueEntity buscarMovimentacaoPorId(Long id) {
+        return movimentacoesEstoqueRepository.findById(id).orElseThrow(() -> {
+            log.warn("Movimentação não encontrada. ID: {}", id);
+            return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Movimentação não encontrada com ID: " + id);
+        });
+    }
 
+    // ===================== AUXILIARES =====================
+
+    public BigDecimal converterQuantidade(BigDecimal quantidade, ConversoesEntity origem, ConversoesEntity destino) {
         if (origem.getId().equals(destino.getId())) {
             return quantidade;
         }
 
         if (origem.getFatorBase() == null || destino.getFatorBase() == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Fator de conversão não cadastrado"
-            );
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Fator de conversão não cadastrado");
         }
 
         return quantidade
@@ -378,44 +236,82 @@ public class MovimentacoesEstoqueService {
                 .divide(destino.getFatorBase(), 4, RoundingMode.HALF_UP);
     }
 
-    private MovimentacoesEstoqueEntity registrarMovimentacao(
-            EstoquesEntity estoque,
-            String tipo,
-            BigDecimal qtde,
-            BigDecimal qtdeConvertida,
-            UsuariosEntity usuario,
-            MovimentacoesEstoqueRequest request,
-            ConversoesEntity conversao
-    ) {
 
-        MovimentacoesEstoqueEntity movimentacoesEstoqueEntity = new MovimentacoesEstoqueEntity();
+     // Fluxo comum de ENTRADA e SAIDA: valida usuário, obtém o estoque,
+     // converte,aplica no saldo, salva e registra a movimentação.
+    public MovimentacoesEstoqueEntity movimentar(String tipo,
+                                                  MovimentacoesEstoqueRequest request,
+                                                  Supplier<EstoquesEntity> estoqueSupplier) {
+        UsuariosEntity usuario = usuariosService.buscarUsuarioPorId(request.fk_id_usuario());
+        EstoquesEntity estoque = estoqueSupplier.get();
 
-        movimentacoesEstoqueEntity.setEstoqueEntity(estoque);
-        movimentacoesEstoqueEntity.setTipo(tipo);
-        movimentacoesEstoqueEntity.setQuantidade(qtde);
-        movimentacoesEstoqueEntity.setQtdeConversao(qtdeConvertida);
+        ConversoesEntity conversao = estoquesService.buscarConversaoPorId(request.fk_id_conversao());
+        BigDecimal qtde = BigDecimal.valueOf(request.qtde());
+        BigDecimal qtdeConvertida = converterQuantidade(qtde, conversao, estoque.getConversoesEntity());
 
-        BigDecimal valorUnitario = BigDecimal.valueOf(request.valorUnitario());
-        BigDecimal valorTotal = qtdeConvertida.multiply(valorUnitario);
-        movimentacoesEstoqueEntity.setValorUnitario(valorUnitario);
-        movimentacoesEstoqueEntity.setValorTotal(valorTotal);
+        BigDecimal saldoAnterior = estoque.getQntdEstoque();
+        aplicarNoEstoque(estoque, tipo, qtdeConvertida);
+        estoquesRepository.save(estoque);
 
-        movimentacoesEstoqueEntity.setUsuarioEntity(usuario);
-        movimentacoesEstoqueEntity.setConversoesEntity(conversao);
-        movimentacoesEstoqueEntity.setObservacao(request.observacao());
-        movimentacoesEstoqueEntity.setProdutosEntity(estoque.getProdutosEntity());
+        log.info("Estoque atualizado ({}). Estoque: {}, Saldo anterior: {}, Quantidade: {}, Novo saldo: {}",
+                tipo,
+                estoque.getId(),
+                saldoAnterior,
+                qtdeConvertida,
+                estoque.getQntdEstoque());
 
-        return movimentacoesEstoqueRepository.save(movimentacoesEstoqueEntity);
+        MovimentacoesEstoqueEntity movimentacao = registrarMovimentacao(
+                estoque,
+                tipo,
+                qtde,
+                qtdeConvertida,
+                usuario,
+                BigDecimal.valueOf(request.valorUnitario()),
+                request.observacao(),
+                conversao);
+
+        log.info("{} registrada com sucesso. Movimentação: {}, Estoque: {}",
+                tipo, movimentacao.getId(), estoque.getId());
+
+        return movimentacao;
     }
 
-    public MovimentacoesEstoqueEntity buscarMovimentacaoPorId(Long id) {
-        return movimentacoesEstoqueRepository.findById(id).orElseThrow
-                (() -> {
-                    log.warn("Movimentação não encontrada para edição. ID: {}", id);
+    public EstoquesEntity criarEstoqueSeProdutoInformado(MovimentacoesEstoqueRequest request) {
+        if (request.fk_id_produto() == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Estoque não encontrado");
+        }
 
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Movimentação não encontrada com ID: " + id);
-        });
+        EstoquesRequest estoqueRequest = new EstoquesRequest(
+                request.fk_id_produto(),
+                0.0, // Começa vazio
+                request.fk_id_conversao(),
+                request.local());
+
+        return estoquesService.salvarEstoque(estoqueRequest);
+    }
+
+    public MovimentacoesEstoqueEntity registrarMovimentacao(EstoquesEntity estoque,
+                                                             String tipo,
+                                                             BigDecimal qtde,
+                                                             BigDecimal qtdeConvertida,
+                                                             UsuariosEntity usuario,
+                                                             BigDecimal valorUnitario,
+                                                             String observacao,
+                                                             ConversoesEntity conversao) {
+        MovimentacoesEstoqueEntity movimentacao = new MovimentacoesEstoqueEntity();
+
+        movimentacao.setEstoqueEntity(estoque);
+        movimentacao.setTipo(tipo);
+        movimentacao.setQuantidade(qtde);
+        movimentacao.setQtdeConversao(qtdeConvertida);
+        movimentacao.setValorUnitario(valorUnitario);
+        movimentacao.setValorTotal(qtdeConvertida.multiply(valorUnitario));
+        movimentacao.setUsuarioEntity(usuario);
+        movimentacao.setConversoesEntity(conversao);
+        movimentacao.setObservacao(observacao);
+        movimentacao.setProdutosEntity(estoque.getProdutosEntity());
+
+        return movimentacoesEstoqueRepository.save(movimentacao);
     }
 
     public boolean afetaEstoque(MovimentacoesEstoqueRequest request) {
@@ -449,7 +345,6 @@ public class MovimentacoesEstoqueService {
     public void reaplicarMovimentacao(EstoquesEntity estoque,
                                        MovimentacoesEstoqueEntity movimentacao,
                                        MovimentacoesEstoqueRequest request) {
-
         String novoTipo = Optional.ofNullable(request.tipo())
                 .orElse(movimentacao.getTipo());
 
@@ -461,8 +356,7 @@ public class MovimentacoesEstoqueService {
                 .orElse(movimentacao.getConversoesEntity().getId());
 
         ConversoesEntity conversao = estoquesService.buscarConversaoPorId(novaConversaoId);
-        BigDecimal qtdeConvertida = converterParaConversaoDoEstoque(
-                novaQtde, conversao, estoque.getConversoesEntity());
+        BigDecimal qtdeConvertida = converterQuantidade(novaQtde, conversao, estoque.getConversoesEntity());
 
         aplicarNoEstoque(estoque, novoTipo, qtdeConvertida);
 
@@ -472,15 +366,6 @@ public class MovimentacoesEstoqueService {
         movimentacao.setConversoesEntity(conversao);
 
         atualizarValores(movimentacao, request.valorUnitario(), qtdeConvertida);
-    }
-
-    public BigDecimal converterParaConversaoDoEstoque(BigDecimal qtde,
-                                                       ConversoesEntity conversao,
-                                                       ConversoesEntity conversaoEstoque) {
-        if (conversao.getId().equals(conversaoEstoque.getId())) {
-            return qtde;
-        }
-        return converterQuantidade(qtde, conversao, conversaoEstoque);
     }
 
     public void aplicarNoEstoque(EstoquesEntity estoque, String tipo, BigDecimal qtdeConvertida) {
@@ -493,16 +378,31 @@ public class MovimentacoesEstoqueService {
     }
 
     public void validarSaldoSuficiente(EstoquesEntity estoque, BigDecimal qtdeConvertida) {
+        validarSaldoSuficiente(estoque, qtdeConvertida, "Quantidade insuficiente no estoque", null);
+    }
+
+    public void validarSaldoSuficiente(EstoquesEntity estoque,
+                                        BigDecimal qtdeConvertida,
+                                        String mensagem,
+                                        String unidade) {
         if (estoque.getQntdEstoque().compareTo(qtdeConvertida) < 0) {
+            String sufixo = unidade != null ? " " + unidade : "";
+
+            log.warn("Estoque insuficiente. Estoque: {}, Disponível: {}, Solicitado: {}",
+                    estoque.getId(),
+                    estoque.getQntdEstoque(),
+                    qtdeConvertida);
+
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Quantidade insuficiente no estoque. Disponível: " + estoque.getQntdEstoque()
-                            + ", Solicitado: " + qtdeConvertida);
+                    mensagem + ". Disponível: " + estoque.getQntdEstoque() + sufixo
+                            + ", Solicitado: " + qtdeConvertida + sufixo);
         }
     }
 
     public void atualizarValores(MovimentacoesEstoqueEntity movimentacao,
                                   Double valorUnitarioRequest,
                                   BigDecimal qtdeConvertida) {
+
         BigDecimal valorUnitario = Optional.ofNullable(valorUnitarioRequest)
                 .map(BigDecimal::valueOf)
                 .orElse(movimentacao.getValorUnitario());
@@ -510,5 +410,4 @@ public class MovimentacoesEstoqueService {
         movimentacao.setValorUnitario(valorUnitario);
         movimentacao.setValorTotal(qtdeConvertida.multiply(valorUnitario));
     }
-
 }

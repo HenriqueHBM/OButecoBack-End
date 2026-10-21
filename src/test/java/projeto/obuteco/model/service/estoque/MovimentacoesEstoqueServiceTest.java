@@ -7,7 +7,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import projeto.obuteco.controller.estoque.dto.MovimentacoesEstoqueRequest;
-import projeto.obuteco.model.Enum.*;
+import projeto.obuteco.model.enums.*;
 import projeto.obuteco.model.entity.conversao.ConversoesEntity;
 import projeto.obuteco.model.entity.estoque.EstoquesEntity;
 import projeto.obuteco.model.entity.estoque.MovimentacoesEstoqueEntity;
@@ -169,7 +169,6 @@ class MovimentacoesEstoqueServiceTest {
         var resultado = movimentacoesEstoqueService.ehSaida(tipo);
 
         //Assert
-        assertNotNull(resultado);
         assertTrue(resultado);
     }
 
@@ -224,6 +223,114 @@ class MovimentacoesEstoqueServiceTest {
 
         //Assert
         assertFalse(resultado);
+    }
+
+    //-------------------Testa atualizarValores-------------------
+    @Test
+    @DisplayName("Deve atualizar o valor unitário e recalcular o valor total")
+    void atualizar_valores_com_valor_unitario_informado() {
+        // Arrange
+        movimentacao.setValorUnitario(new BigDecimal("10.00"));
+
+        BigDecimal qtdeConvertida = new BigDecimal("5.00");
+        Double valorUnitarioRequest = 20.0;
+
+        // Act
+        movimentacoesEstoqueService.atualizarValores(movimentacao, valorUnitarioRequest, qtdeConvertida);
+
+        //Assert
+        assertEquals(new BigDecimal("20.0"), movimentacao.getValorUnitario());
+        assertEquals(new BigDecimal("100.000"), movimentacao.getValorTotal());
+    }
+
+    @Test
+    @DisplayName("Deve manter o valor unitario anterior quando o request for nulo")
+    void atualizar_valores_com_valor_unitario_nulo() {
+        // Arrange
+        movimentacao.setValorUnitario(new BigDecimal("10.00"));
+
+        BigDecimal qtdeConvertida = new BigDecimal("5.00");
+        Double valorUnitarioRequest = null;
+
+        // Act
+        movimentacoesEstoqueService.atualizarValores(movimentacao, valorUnitarioRequest, qtdeConvertida);
+
+        // Assert
+        assertEquals(new BigDecimal("10.00"), movimentacao.getValorUnitario());
+
+        assertEquals(new BigDecimal("50.0000"), movimentacao.getValorTotal());
+    }
+
+    //-------------------Testa aplicarNoEstoque-------------------
+    @Test
+    @DisplayName("Deve subtrair do estoque quando a saida tem saldo suficiente")
+    void aplicar_saida_com_saldo_suficiente(){
+        //Arrange
+        estoque.setQntdEstoque(BigDecimal.valueOf(10));
+
+        //Act
+        movimentacoesEstoqueService.aplicarNoEstoque(estoque, "SAIDA", BigDecimal.valueOf(4));
+
+        //Assert
+        assertEquals(0, BigDecimal.valueOf(6).compareTo(estoque.getQntdEstoque()));
+    }
+
+    @Test
+    @DisplayName("Deve permitir saida que zera o estoque")
+    void aplicar_saida_igual_ao_saldo(){
+        //Arrange
+        estoque.setQntdEstoque(BigDecimal.valueOf(10));
+
+        //Act
+        movimentacoesEstoqueService.aplicarNoEstoque(estoque, "SAIDA", BigDecimal.valueOf(10));
+
+        //Assert
+        assertEquals(0, BigDecimal.ZERO.compareTo(estoque.getQntdEstoque()));
+    }
+
+    @Test
+    @DisplayName("Deve lancar excecao e manter o saldo quando a saida excede o estoque")
+    void aplicar_saida_com_saldo_insuficiente(){
+        //Arrange
+        estoque.setQntdEstoque(BigDecimal.valueOf(10));
+        var qtdeConvertida = BigDecimal.valueOf(11);
+
+        //Act
+        var chamada = assertThrows(ResponseStatusException.class,
+                () -> movimentacoesEstoqueService.aplicarNoEstoque(estoque, "SAIDA", qtdeConvertida));
+
+        //Assert
+        assertEquals(0, BigDecimal.valueOf(10).compareTo(estoque.getQntdEstoque()));
+        assertNotNull(chamada.getReason());
+        assertEquals(HttpStatus.BAD_REQUEST, chamada.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Deve somar ao estoque quando o tipo e entrada")
+    void aplicar_entrada(){
+        //Arrange
+        estoque.setQntdEstoque(BigDecimal.valueOf(10));
+
+        //Act
+        movimentacoesEstoqueService.aplicarNoEstoque(estoque, "ENTRADA", BigDecimal.valueOf(5));
+
+        //Assert
+        assertEquals(0, BigDecimal.valueOf(15).compareTo(estoque.getQntdEstoque()));
+    }
+
+    @Test
+    @DisplayName("Nao deve alterar o estoque quando o tipo nao e entrada nem saida")
+    void aplicar_tipo_desconhecido(){
+        //Arrange
+        estoque.setQntdEstoque(BigDecimal.valueOf(10));
+
+        //Act
+        movimentacoesEstoqueService.aplicarNoEstoque(estoque, "DESCONHECIDO", BigDecimal.valueOf(5));
+
+        //Assert
+        assertEquals(0, BigDecimal.valueOf(10).compareTo(estoque.getQntdEstoque()));
+        assertEquals("Prateleira", estoque.getLocal()); //nao alterao a entidade
+        assertSame(produto, estoque.getProdutosEntity());
     }
 
 }
