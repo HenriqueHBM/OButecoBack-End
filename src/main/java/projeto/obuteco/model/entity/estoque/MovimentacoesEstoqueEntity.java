@@ -60,4 +60,16 @@ public class MovimentacoesEstoqueEntity {
     @ManyToOne
     @JoinColumn(name = "fk_id_produto")
     private ProdutosEntity produtosEntity;
+
+    public MovimentacoesEstoqueEntity(){}
+
+    public MovimentacoesEstoqueEntity(EstoquesEntity estoqueEntity, String tipo, BigDecimal quantidade, BigDecimal valorUnitario, UsuariosEntity usuarioEntity, ConversoesEntity conversoesEntity, ProdutosEntity produtosEntity) {
+        this.estoqueEntity = estoqueEntity;
+        this.tipo = tipo;
+        this.quantidade = quantidade;
+        this.valorUnitario = valorUnitario;
+        this.usuarioEntity = usuarioEntity;
+        this.conversoesEntity = conversoesEntity;
+        this.produtosEntity = produtosEntity;
+    }
 }

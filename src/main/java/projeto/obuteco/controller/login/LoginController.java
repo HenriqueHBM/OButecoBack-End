@@ -26,7 +26,7 @@ public class LoginController {
 
     @PostMapping()
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
-        log.info("Solicitação de login. Usuário: {}", loginRequest.usuario());
+        log.info("Solicitação de login. Usuário: {}", loginRequest);
 
         UsuariosEntity usuario = loginService.autenticaoDoLogin(loginRequest);
 

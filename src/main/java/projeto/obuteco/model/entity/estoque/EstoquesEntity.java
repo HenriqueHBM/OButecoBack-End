@@ -42,4 +42,14 @@ public class EstoquesEntity {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private Instant dataAtualizado;
+
+    public EstoquesEntity(){}
+
+    public EstoquesEntity(Long id, ProdutosEntity produtosEntity, BigDecimal qntdEstoque, ConversoesEntity conversoesEntity, String local) {
+        this.id = id;
+        this.produtosEntity = produtosEntity;
+        this.qntdEstoque = qntdEstoque;
+        this.conversoesEntity = conversoesEntity;
+        this.local = local;
+    }
 }

@@ -30,4 +30,14 @@ public class InsumosProdutoEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_id_conversao")
     private ConversoesEntity conversoesEntity;
+
+    public InsumosProdutoEntity(){}
+
+    public InsumosProdutoEntity(Long id, ProdutosEntity produtosEntity, ProdutosEntity insumos, BigDecimal qtde, ConversoesEntity conversoesEntity) {
+        this.id = id;
+        this.produtosEntity = produtosEntity;
+        this.insumos = insumos;
+        this.qtde = qtde;
+        this.conversoesEntity = conversoesEntity;
+    }
 }

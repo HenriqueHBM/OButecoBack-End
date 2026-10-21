@@ -1,8 +1,8 @@
 package projeto.obuteco.controller.produto.dto;
 
-import projeto.obuteco.model.Enum.CategoriaEnum;
-import projeto.obuteco.model.Enum.EStatus;
-import projeto.obuteco.model.Enum.GrupoEnum;
+import projeto.obuteco.model.enums.CategoriaEnum;
+import projeto.obuteco.model.enums.EStatus;
+import projeto.obuteco.model.enums.GrupoEnum;
 import projeto.obuteco.model.entity.produto.ProdutosEntity;
 
 import java.math.BigDecimal;
