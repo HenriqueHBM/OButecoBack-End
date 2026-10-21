@@ -6,8 +6,8 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import projeto.obuteco.model.Enum.CargoEnum;
-import projeto.obuteco.model.Enum.EStatus;
+import projeto.obuteco.model.enums.CargoEnum;
+import projeto.obuteco.model.enums.EStatus;
 
 import java.sql.Timestamp;
 
@@ -41,11 +41,11 @@ public class UsuariosEntity {
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = true)
-    private Timestamp created_at;
+    private Timestamp createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = true)
-    private Timestamp updated_at;
+    private Timestamp updatedAt;
 
     @Column(name = "deleted_at", nullable = true)
     private Timestamp deletedAt;

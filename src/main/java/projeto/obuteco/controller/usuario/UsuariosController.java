@@ -32,7 +32,7 @@ public class UsuariosController {
 
     @PostMapping()
     public ResponseEntity<UsuariosResponse> salvarUsuario(@Valid @RequestBody UsuariosRequest usuariosRequest) {
-        log.info("Solicitação de cadastro de usuário. Usuário: {}", usuariosRequest.usuario());
+        log.info("Solicitação de cadastro de usuário. Usuário: {}", usuariosRequest);
 
         UsuariosEntity usuariosEntity = this.usuariosService.salvarUsuario(usuariosRequest);
 

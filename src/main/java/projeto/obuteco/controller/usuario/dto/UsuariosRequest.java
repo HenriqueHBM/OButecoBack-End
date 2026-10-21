@@ -1,7 +1,7 @@
 package projeto.obuteco.controller.usuario.dto;
 
 import jakarta.validation.constraints.*;
-import projeto.obuteco.model.Enum.CargoEnum;
+import projeto.obuteco.model.enums.CargoEnum;
 import projeto.obuteco.model.entity.usuario.UsuariosEntity;
 
 import java.sql.Timestamp;
@@ -27,8 +27,8 @@ public record UsuariosRequest(
                 usuariosEntity.getUsuario(),
                 usuariosEntity.getSenha(),
                 usuariosEntity.getCargo(),
-                usuariosEntity.getCreated_at(),
-                usuariosEntity.getUpdated_at(),
+                usuariosEntity.getCreatedAt(),
+                usuariosEntity.getUpdatedAt(),
                 usuariosEntity.getDeletedAt()
         );
     }

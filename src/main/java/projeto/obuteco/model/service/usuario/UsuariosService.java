@@ -4,7 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import projeto.obuteco.controller.usuario.dto.UsuariosRequest;
-import projeto.obuteco.model.Enum.EStatus;
+import projeto.obuteco.model.enums.EStatus;
 import projeto.obuteco.model.entity.usuario.UsuariosEntity;
 import projeto.obuteco.model.repository.usuario.UsuariosRepository;
 
@@ -37,11 +37,11 @@ public class UsuariosService {
     }
 
     public UsuariosEntity salvarUsuario(UsuariosRequest usuariosRequest) {
-        log.info("Criando usuário. Usuário: {}", usuariosRequest.usuario());
+        log.info("Criando usuário. Usuário: {}", usuariosRequest);
 
         if (usuariosRepository.findByUsuarioAndDeletedAtIsNull(usuariosRequest.usuario()).isPresent()) {
             log.warn("Tentativa de cadastro de usuário já existente. Usuário: {}",
-                    usuariosRequest.usuario());
+                    usuariosRequest);
 
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuário já existe");
         } //valida se atributo usuario ja existe antes de salvar
@@ -68,12 +68,11 @@ public class UsuariosService {
 
         UsuariosEntity usuariosEntity = this.buscarUsuarioPorId(id);
 
-        if (!usuariosEntity.getUsuario().equals(usuariosRequest.usuario())) {
-            if (usuariosRepository.findByUsuarioAndDeletedAtIsNull(usuariosRequest.usuario()).isPresent()) {
-                log.warn("Tentativa de alterar usuário para nome de usuário já existente. ID: {}, Usuário: {}", id,
-                        usuariosRequest.usuario());
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuario ja existe");
-            }
+        if (!usuariosEntity.getUsuario().equals(usuariosRequest.usuario()) && usuariosRepository.findByUsuarioAndDeletedAtIsNull(usuariosRequest.usuario()).isPresent()) {
+            log.warn("Tentativa de alterar usuário para nome de usuário já existente. ID: {}, Usuário: {}", id,
+                    usuariosRequest);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuario ja existe");
+
         } //valida se atributo usuario ja existe caso esteja sendo alterado
 
         usuariosEntity.setNome(usuariosRequest.nome());
@@ -117,7 +116,7 @@ public class UsuariosService {
             //verifica se nao existe um outro usuario com o mesmo nome do passsado para atualizar
             if (usuariosRepository.findByUsuarioAndDeletedAtIsNull(usuariosRequest.usuario()).isPresent()) {
                 log.warn("Tentativa de alterar usuário para nome de usuário já existente. ID: {}, Usuário: {}", id,
-                        usuariosRequest.usuario());
+                        usuariosRequest);
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuário já existe");
             }
             usuariosEntity.setUsuario(usuariosRequest.usuario());
