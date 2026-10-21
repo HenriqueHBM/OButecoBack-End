@@ -253,10 +253,13 @@ class ProdutoServiceTest {
     void insumoRepetido(){
         when(produtosRepository.findById(2L)).thenReturn(Optional.of(insumo));
 
-        var ex = assertThrows(ResponseStatusException.class,
-                () -> produtosService.aplicarInsumos(produto, List.of(insumosRequest, insumosRequest)));
+        var itens = List.of(insumosRequest, insumosRequest);
 
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        var resp = assertThrows(ResponseStatusException.class,
+                () -> produtosService.aplicarInsumos(produto, itens));
+
+        assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
+        assertEquals("Insumo repetido na lista: 2", resp.getReason());
         verify(produtosRepository, times(1)).findById(2L);
     }
 
@@ -265,8 +268,11 @@ class ProdutoServiceTest {
     void aplicarProdutoComoProprioInsumo(){
         var proprioRequest = new ProdutoRequest.InsumosRequest(1L, BigDecimal.valueOf(1)); // 1L = id do produto
 
+        var itens = List.of(proprioRequest);
+
+
         var resp = assertThrows(ResponseStatusException.class,
-                () -> produtosService.aplicarInsumos(produto, List.of(proprioRequest)));
+                () -> produtosService.aplicarInsumos(produto, itens));
 
         assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
         assertEquals("Produto e Insumos nao podem ser o mesmo", resp.getReason());
@@ -279,8 +285,11 @@ class ProdutoServiceTest {
         var inexistenteRequest = new ProdutoRequest.InsumosRequest(99L, BigDecimal.valueOf(1));
         when(produtosRepository.findById(99L)).thenReturn(Optional.empty());
 
+        var itens = List.of(inexistenteRequest);
+
+
         var resp = assertThrows(ResponseStatusException.class,
-                () -> produtosService.aplicarInsumos(produto, List.of(inexistenteRequest)));
+                () -> produtosService.aplicarInsumos(produto, itens));
 
         assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
         assertEquals("Insumo não encontrado: 99", resp.getReason());
@@ -292,8 +301,11 @@ class ProdutoServiceTest {
         insumo.setCategoriaEnum(CategoriaEnum.NORMAL);
         when(produtosRepository.findById(2L)).thenReturn(Optional.of(insumo));
 
+        var itens = List.of(insumosRequest);
+
+
         var resp = assertThrows(ResponseStatusException.class,
-                () -> produtosService.aplicarInsumos(produto, List.of(insumosRequest)));
+                () -> produtosService.aplicarInsumos(produto, itens));
 
         assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
         assertEquals("Insumo precisa ser da categoria de [Insumo]", resp.getReason());
@@ -305,8 +317,11 @@ class ProdutoServiceTest {
         insumo.setCategoriaEnum(null);
         when(produtosRepository.findById(2L)).thenReturn(Optional.of(insumo));
 
+        var itens = List.of(insumosRequest);
+
+
         var resp = assertThrows(ResponseStatusException.class,
-                () -> produtosService.aplicarInsumos(produto, List.of(insumosRequest)));
+                () -> produtosService.aplicarInsumos(produto, itens));
 
         assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
         assertEquals("Insumo precisa ser da categoria de [Insumo]", resp.getReason());
@@ -318,8 +333,11 @@ class ProdutoServiceTest {
         insumo.setStatus(EStatus.INATIVO);
         when(produtosRepository.findById(2L)).thenReturn(Optional.of(insumo));
 
+        var itens = List.of(insumosRequest);
+
+
         var resp = assertThrows(ResponseStatusException.class,
-                () -> produtosService.aplicarInsumos(produto, List.of(insumosRequest)));
+                () -> produtosService.aplicarInsumos(produto, itens));
 
         assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
         assertEquals("Insumo inativo: Queijo", resp.getReason());
@@ -328,11 +346,14 @@ class ProdutoServiceTest {
     @Test
     @DisplayName("Insumo deletado (deletedAt preenchido) retorna 400")
     void aplicarInsumoDeletado(){
-        insumo.setDeletedAt(new Timestamp(System.currentTimeMillis())); // status continua ATIVO, so o deletedAt e preenchido
+        insumo.setDeletedAt(new Timestamp(System.currentTimeMillis()));
         when(produtosRepository.findById(2L)).thenReturn(Optional.of(insumo));
 
+        var itens = List.of(insumosRequest);
+
+
         var resp = assertThrows(ResponseStatusException.class,
-                () -> produtosService.aplicarInsumos(produto, List.of(insumosRequest)));
+                () -> produtosService.aplicarInsumos(produto, itens));
 
         assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
         assertEquals("Insumo inativo: Queijo", resp.getReason());
@@ -345,9 +366,11 @@ class ProdutoServiceTest {
         when(produtosRepository.findById(2L)).thenReturn(Optional.of(insumo));
         when(produtosRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(ResponseStatusException.class,
-                () -> produtosService.aplicarInsumos(produto, List.of(insumosRequest, inexistenteRequest)));
+        var itens = List.of(insumosRequest, inexistenteRequest);
 
+
+        assertThrows(ResponseStatusException.class,
+                () -> produtosService.aplicarInsumos(produto, itens));
 
         assertEquals(1, produto.getInsumos().size());
         assertSame(insumo, produto.getInsumos().get(0).getInsumos());
@@ -362,7 +385,7 @@ class ProdutoServiceTest {
 
         produtosService.atualizarStatusProduto(1L);
 
-        assertTrue(produto.getStatus().equals(EStatus.INATIVO));
+        assertEquals(EStatus.INATIVO, produto.getStatus());
         verify(produtosRepository).save(produto);
     }
 
@@ -376,7 +399,7 @@ class ProdutoServiceTest {
 
         produtosService.atualizarStatusProduto(1L);
 
-        assertTrue(produto.getStatus().equals(EStatus.ATIVO));
+        assertEquals(EStatus.ATIVO, produto.getStatus());
         assertEquals(null, produto.getDeletedAt());
         verify(produtosRepository).save(produto);
     }

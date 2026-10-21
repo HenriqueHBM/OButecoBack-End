@@ -24,7 +24,7 @@ import java.util.Set;
 public class ProdutosService {
     private final ProdutosRepository produtosRepository;
 
-    public static final String msngProdutoInsumoSemInsumo = "Produto com categoria de insumos precisa de ao menos um insumo";
+    public static final String MSG_PRODUTO_INSUMO_SEM_INSUMO = "Produto com categoria de insumos precisa de ao menos um insumo";
 
     //FIND Produto
     public ProdutosEntity buscarProdutoPorId(Long id){
@@ -109,7 +109,7 @@ public class ProdutosService {
         //caso for da categoria de "PRODUTO_INSUMOS"
         if(request.categoriaEnum() == CategoriaEnum.PRODUTO_INSUMOS){
             if(request.insumos() == null || request.insumos().isEmpty()){
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msngProdutoInsumoSemInsumo);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MSG_PRODUTO_INSUMO_SEM_INSUMO);
             }
             this.aplicarInsumos(produto, request.insumos());
         }
@@ -133,7 +133,7 @@ public class ProdutosService {
         //caso for da categoria de "PRODUTO_INSUMOS"
         if(request.categoriaEnum() == CategoriaEnum.PRODUTO_INSUMOS){
             if(request.insumos() == null || request.insumos().isEmpty()){
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msngProdutoInsumoSemInsumo);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MSG_PRODUTO_INSUMO_SEM_INSUMO);
             }
             this.aplicarInsumos(produto, request.insumos());
         }else{
@@ -201,7 +201,7 @@ public class ProdutosService {
         if (produto.getCategoriaEnum() == CategoriaEnum.PRODUTO_INSUMOS
                 && produto.getInsumos().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    msngProdutoInsumoSemInsumo);
+                    MSG_PRODUTO_INSUMO_SEM_INSUMO);
         }
 
         log.info("Dado do produto atualizado: {}", produto);

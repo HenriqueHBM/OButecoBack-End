@@ -25,8 +25,8 @@ public record UsuariosResponse(
                 usuariosEntity.getSenha(),
                 usuariosEntity.getStatus(),
                 usuariosEntity.getCargo(),
-                usuariosEntity.getCreated_at(),
-                usuariosEntity.getUpdated_at(),
+                usuariosEntity.getCreatedAt(),
+                usuariosEntity.getUpdatedAt(),
                 usuariosEntity.getDeletedAt()
         );
     }
