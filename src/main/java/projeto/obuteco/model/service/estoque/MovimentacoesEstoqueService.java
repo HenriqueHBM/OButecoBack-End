@@ -47,6 +47,14 @@ public class MovimentacoesEstoqueService {
         this.usuariosService = usuariosService;
     }
 
+    public record DadosMovimentacao(String tipo,
+                                    BigDecimal qtde,
+                                    BigDecimal qtdeConvertida,
+                                    UsuariosEntity usuario,
+                                    BigDecimal valorUnitario,
+                                    String observacao,
+                                    ConversoesEntity conversao) {}
+
     // ===================== OPERAÇÕES PRINCIPAIS =====================
 
     @Transactional
@@ -122,13 +130,14 @@ public class MovimentacoesEstoqueService {
 
             registrarMovimentacao(
                     estoqueInsumo,
-                    TIPO_SAIDA_INSUMO,
-                    quantidadeNecessaria,
-                    quantidadeConvertida,
-                    usuario,
-                    insumo.getInsumos().getPrecoVenda(),
-                    observacao,
-                    insumo.getConversoesEntity());
+                    new DadosMovimentacao(
+                            TIPO_SAIDA_INSUMO,
+                            quantidadeNecessaria,
+                            quantidadeConvertida,
+                            usuario,
+                            insumo.getInsumos().getPrecoVenda(),
+                            observacao,
+                            insumo.getConversoesEntity()));
 
             log.info("Saída de insumo registrada. Produto principal: {}, Insumo: {}, Quantidade: {}",
                     produto.getNome(),
@@ -237,8 +246,6 @@ public class MovimentacoesEstoqueService {
     }
 
 
-     // Fluxo comum de ENTRADA e SAIDA: valida usuário, obtém o estoque,
-     // converte,aplica no saldo, salva e registra a movimentação.
     public MovimentacoesEstoqueEntity movimentar(String tipo,
                                                   MovimentacoesEstoqueRequest request,
                                                   Supplier<EstoquesEntity> estoqueSupplier) {
@@ -262,13 +269,14 @@ public class MovimentacoesEstoqueService {
 
         MovimentacoesEstoqueEntity movimentacao = registrarMovimentacao(
                 estoque,
-                tipo,
-                qtde,
-                qtdeConvertida,
-                usuario,
-                BigDecimal.valueOf(request.valorUnitario()),
-                request.observacao(),
-                conversao);
+                new DadosMovimentacao(
+                        tipo,
+                        qtde,
+                        qtdeConvertida,
+                        usuario,
+                        BigDecimal.valueOf(request.valorUnitario()),
+                        request.observacao(),
+                        conversao));
 
         log.info("{} registrada com sucesso. Movimentação: {}, Estoque: {}",
                 tipo, movimentacao.getId(), estoque.getId());
@@ -290,25 +298,18 @@ public class MovimentacoesEstoqueService {
         return estoquesService.salvarEstoque(estoqueRequest);
     }
 
-    public MovimentacoesEstoqueEntity registrarMovimentacao(EstoquesEntity estoque,
-                                                             String tipo,
-                                                             BigDecimal qtde,
-                                                             BigDecimal qtdeConvertida,
-                                                             UsuariosEntity usuario,
-                                                             BigDecimal valorUnitario,
-                                                             String observacao,
-                                                             ConversoesEntity conversao) {
+    public MovimentacoesEstoqueEntity registrarMovimentacao(EstoquesEntity estoque, DadosMovimentacao dados) {
         MovimentacoesEstoqueEntity movimentacao = new MovimentacoesEstoqueEntity();
 
         movimentacao.setEstoqueEntity(estoque);
-        movimentacao.setTipo(tipo);
-        movimentacao.setQuantidade(qtde);
-        movimentacao.setQtdeConversao(qtdeConvertida);
-        movimentacao.setValorUnitario(valorUnitario);
-        movimentacao.setValorTotal(qtdeConvertida.multiply(valorUnitario));
-        movimentacao.setUsuarioEntity(usuario);
-        movimentacao.setConversoesEntity(conversao);
-        movimentacao.setObservacao(observacao);
+        movimentacao.setTipo(dados.tipo());
+        movimentacao.setQuantidade(dados.qtde());
+        movimentacao.setQtdeConversao(dados.qtdeConvertida());
+        movimentacao.setValorUnitario(dados.valorUnitario());
+        movimentacao.setValorTotal(dados.qtdeConvertida().multiply(dados.valorUnitario()));
+        movimentacao.setUsuarioEntity(dados.usuario());
+        movimentacao.setConversoesEntity(dados.conversao());
+        movimentacao.setObservacao(dados.observacao());
         movimentacao.setProdutosEntity(estoque.getProdutosEntity());
 
         return movimentacoesEstoqueRepository.save(movimentacao);
