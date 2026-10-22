@@ -1,9 +1,12 @@
 package projeto.obuteco.model.service.produto;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -30,7 +33,6 @@ import static org.mockito.Mockito.*;
 
 // @SpringBootTest
 @ExtendWith(MockitoExtension.class)
-
 class ProdutoServiceTest {
     @Mock
     private ProdutosRepository produtosRepository;
@@ -85,6 +87,22 @@ class ProdutoServiceTest {
             BigDecimal.valueOf(9.99),
             "Teste Prod",
             List.of()
+    );
+
+    ProdutoRequest prodInsumosRequest = new ProdutoRequest(
+            1L,
+            "Espetinho de Frango",
+            EStatus.ATIVO,
+            CategoriaEnum.PRODUTO_INSUMOS,
+            GrupoEnum.INGREDIENTE,
+            BigDecimal.valueOf(9.99),
+            "Teste Prod",
+            List.of(
+                    insumosRequest = new ProdutoRequest.InsumosRequest(
+                            2L,
+                            BigDecimal.valueOf(200)
+                    )
+            )
     );
 
     ProdutoRequest.InsumosRequest insumosRequest = new ProdutoRequest.InsumosRequest(
@@ -402,5 +420,271 @@ class ProdutoServiceTest {
         assertEquals(EStatus.ATIVO, produto.getStatus());
         assertEquals(null, produto.getDeletedAt());
         verify(produtosRepository).save(produto);
+    }
+
+    // | --------------------- [CADASTRAAR]
+
+    @Test
+    @DisplayName("Salva produto do tipo normal")
+    void salvarProdutoNormal(){
+        when(produtosRepository.save(any(ProdutosEntity.class)))
+                .thenAnswer( i -> {
+                    ProdutosEntity p = i.getArgument(0);
+                    p.setId(1L);
+                    return p;
+                });
+
+        var newProd = produtosService.salvarProduto(prodRequest);
+        verify(produtosRepository).save(produtoCaptor.capture());
+
+        var salvo = produtoCaptor.getValue();
+
+        assertEquals("Espetinho de Frango", salvo.getNome());
+        assertEquals(EStatus.ATIVO, salvo.getStatus());
+        assertEquals(CategoriaEnum.NORMAL, salvo.getCategoriaEnum());
+        assertEquals(GrupoEnum.COMIDA, salvo.getGrupo());
+        assertEquals(BigDecimal.valueOf(9.99), salvo.getPrecoVenda());
+        assertEquals("Teste Prod", salvo.getObservacao());
+        assertTrue(salvo.getInsumosEntity().isEmpty());
+
+        assertEquals(1L, newProd.getId());
+    }
+
+    @Test
+    @DisplayName("Salva produto do tipo normal")
+    void salvarProdutoComInsumo(){
+        when(produtosRepository.findById(2L)).thenReturn(Optional.of(insumo));
+
+        when(produtosRepository.save(any(ProdutosEntity.class)))
+                .thenAnswer( i -> {
+                    ProdutosEntity p = i.getArgument(0);
+                    p.setId(1L);
+                    return p;
+                });
+
+        var newProd = produtosService.salvarProduto(prodInsumosRequest);
+        verify(produtosRepository).save(produtoCaptor.capture());
+
+        var salvo = produtoCaptor.getValue();
+
+        assertEquals("Espetinho de Frango", salvo.getNome());
+        assertEquals(EStatus.ATIVO, salvo.getStatus());
+        assertEquals(CategoriaEnum.PRODUTO_INSUMOS, salvo.getCategoriaEnum());
+        assertEquals(GrupoEnum.INGREDIENTE, salvo.getGrupo());
+        assertEquals(BigDecimal.valueOf(9.99), salvo.getPrecoVenda());
+        assertEquals("Teste Prod", salvo.getObservacao());
+        assertTrue(salvo.getInsumosEntity().isEmpty());
+
+        assertEquals(1L, newProd.getId());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource //como a ultima excessa é null ou vazio, utilizamos essas duas anotation
+    @DisplayName("Lança BAD_REQUEST ao salvar produto PRODUTO_INSUMOS sem insumos")
+    void salvarProdutoComInsumoSemInsumo(List<ProdutoRequest.InsumosRequest> insumos) {
+        var request = new ProdutoRequest(
+                1L,
+                "Espetinho de Frango",
+                EStatus.ATIVO,
+                CategoriaEnum.PRODUTO_INSUMOS,
+                GrupoEnum.INGREDIENTE,
+                BigDecimal.valueOf(9.99),
+                "Teste Prod",
+                insumos
+        );
+
+        var ex = assertThrows(ResponseStatusException.class,
+                () -> produtosService.salvarProduto(request));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals(ProdutosService.MSG_PRODUTO_INSUMO_SEM_INSUMO, ex.getReason());
+
+        verify(produtosRepository, never()).save(any());
+    }
+
+    // |--------------- funcao [atualizarProduto]
+
+    @Test
+    @DisplayName("Atualiza produto para NORMAL e remove os insumos antigos")
+    void atualizarProdutoNormal(){
+        produto.getInsumos().add(prodInsumo);
+        when(produtosRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(produto));
+        when(produtosRepository.save(produto)).thenReturn(produto);
+
+        var atualizado = produtosService.atualizarProduto(1L, prodRequest);
+
+        assertSame(produto, atualizado);
+        assertEquals("Espetinho de Frango", atualizado.getNome());
+        assertEquals(CategoriaEnum.NORMAL, atualizado.getCategoriaEnum());
+        assertEquals(GrupoEnum.COMIDA, atualizado.getGrupo());
+        assertEquals(BigDecimal.valueOf(9.99), atualizado.getPrecoVenda());
+        assertEquals("Teste Prod", atualizado.getObservacao());
+        assertTrue(atualizado.getInsumos().isEmpty());
+        verify(produtosRepository, never()).findById(any());
+    }
+
+    @Test
+    @DisplayName("Atualiza produto para PRODUTO_INSUMOS aplicando os insumos")
+    void atualizarProdutoComInsumos(){
+        when(produtosRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(produto));
+        when(produtosRepository.findById(2L)).thenReturn(Optional.of(insumo));
+        when(produtosRepository.save(produto)).thenReturn(produto);
+
+        var atualizado = produtosService.atualizarProduto(1L, prodInsumosRequest);
+
+        assertSame(produto, atualizado);
+        assertEquals(CategoriaEnum.PRODUTO_INSUMOS, atualizado.getCategoriaEnum());
+        assertEquals(GrupoEnum.INGREDIENTE, atualizado.getGrupo());
+        assertEquals(1, atualizado.getInsumos().size());
+        assertSame(insumo, atualizado.getInsumos().get(0).getInsumos());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @DisplayName("Atualizar para PRODUTO_INSUMOS sem insumos retorna 400")
+    void atualizarProdutoComInsumoSemInsumo(List<ProdutoRequest.InsumosRequest> insumos){
+        var request = new ProdutoRequest(
+                1L,
+                "Espetinho de Frango",
+                EStatus.ATIVO,
+                CategoriaEnum.PRODUTO_INSUMOS,
+                GrupoEnum.INGREDIENTE,
+                BigDecimal.valueOf(9.99),
+                "Teste Prod",
+                insumos
+        );
+        when(produtosRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(produto));
+
+        var ex = assertThrows(ResponseStatusException.class,
+                () -> produtosService.atualizarProduto(1L, request));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals(ProdutosService.MSG_PRODUTO_INSUMO_SEM_INSUMO, ex.getReason());
+        verify(produtosRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Atualizar produto inexistente retorna 404")
+    void atualizarProdutoNaoEncontrado(){
+        when(produtosRepository.findByIdAndDeletedAtIsNull(99L)).thenReturn(Optional.empty());
+
+        var ex = assertThrows(ResponseStatusException.class,
+                () -> produtosService.atualizarProduto(99L, prodRequest));
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+        verify(produtosRepository, never()).save(any());
+    }
+
+// |--------------- funcao [atualizarProdutoParcial]
+
+    @Test
+    @DisplayName("PATCH com todos os campos nulos nao altera o produto")
+    void atualizarParcialSemAlteracao(){
+        var request = new ProdutoRequest(null, null, null, null, null, null, null, null);
+        when(produtosRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(produto));
+        when(produtosRepository.save(produto)).thenReturn(produto);
+
+        var atualizado = produtosService.atualizarProdutoParcial(1L, request);
+
+        assertSame(produto, atualizado);
+        assertEquals("Espetinho", atualizado.getNome());
+        assertEquals(CategoriaEnum.NORMAL, atualizado.getCategoriaEnum());
+        assertEquals(GrupoEnum.COMIDA, atualizado.getGrupo());
+        assertEquals(BigDecimal.valueOf(9.99), atualizado.getPrecoVenda());
+        assertEquals("Teste Prod", atualizado.getObservacao());
+    }
+
+    @Test
+    @DisplayName("PATCH altera os campos enviados e limpa os insumos ao mudar para NORMAL")
+    void atualizarParcialParaNormal(){
+        produto.setCategoriaEnum(CategoriaEnum.PRODUTO_INSUMOS);
+        produto.getInsumos().add(prodInsumo);
+        var request = new ProdutoRequest(
+                null,
+                "Espetinho de Carne",
+                null,
+                CategoriaEnum.NORMAL,
+                GrupoEnum.INGREDIENTE,
+                BigDecimal.valueOf(12.50),
+                "Obs alterada",
+                null
+        );
+        when(produtosRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(produto));
+        when(produtosRepository.save(produto)).thenReturn(produto);
+
+        var atualizado = produtosService.atualizarProdutoParcial(1L, request);
+
+        assertEquals("Espetinho de Carne", atualizado.getNome());
+        assertEquals(CategoriaEnum.NORMAL, atualizado.getCategoriaEnum());
+        assertEquals(GrupoEnum.INGREDIENTE, atualizado.getGrupo());
+        assertEquals(BigDecimal.valueOf(12.50), atualizado.getPrecoVenda());
+        assertEquals("Obs alterada", atualizado.getObservacao());
+        assertTrue(atualizado.getInsumos().isEmpty());
+    }
+
+    @Test
+    @DisplayName("PATCH muda para PRODUTO_INSUMOS e aplica os insumos")
+    void atualizarParcialParaProdutoInsumos(){
+        var request = new ProdutoRequest(null, null, null, CategoriaEnum.PRODUTO_INSUMOS,
+                null, null, null, List.of(insumosRequest));
+        when(produtosRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(produto));
+        when(produtosRepository.findById(2L)).thenReturn(Optional.of(insumo));
+        when(produtosRepository.save(produto)).thenReturn(produto);
+
+        var atualizado = produtosService.atualizarProdutoParcial(1L, request);
+
+        assertEquals("Espetinho", atualizado.getNome());
+        assertEquals(CategoriaEnum.PRODUTO_INSUMOS, atualizado.getCategoriaEnum());
+        assertEquals(1, atualizado.getInsumos().size());
+        assertSame(insumo, atualizado.getInsumos().get(0).getInsumos());
+    }
+
+    @Test
+    @DisplayName("PATCH sem categoria mantem os insumos do produto")
+    void atualizarParcialMantemInsumos(){
+        produto.setCategoriaEnum(CategoriaEnum.PRODUTO_INSUMOS);
+        produto.getInsumos().add(prodInsumo);
+        var request = new ProdutoRequest(null, "Espetinho de Frango", null, null,
+                null, null, null, null);
+        when(produtosRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(produto));
+        when(produtosRepository.save(produto)).thenReturn(produto);
+
+        var atualizado = produtosService.atualizarProdutoParcial(1L, request);
+
+        assertEquals("Espetinho de Frango", atualizado.getNome());
+        assertEquals(1, atualizado.getInsumos().size());
+        assertSame(prodInsumo, atualizado.getInsumos().get(0));
+        verify(produtosRepository, never()).findById(any());
+    }
+
+    @Test
+    @DisplayName("PATCH com insumos em produto que nao e PRODUTO_INSUMOS retorna 400")
+    void atualizarParcialInsumosCategoriaErrada(){
+        var request = new ProdutoRequest(null, null, null, null,
+                null, null, null, List.of(insumosRequest));
+        when(produtosRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(produto));
+
+        var ex = assertThrows(ResponseStatusException.class,
+                () -> produtosService.atualizarProdutoParcial(1L, request));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals("Só é possível definir insumos em produto da categoria PRODUTO_INSUMOS", ex.getReason());
+        verify(produtosRepository, never()).findById(any());
+        verify(produtosRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("PATCH para PRODUTO_INSUMOS sem insumos retorna 400")
+    void atualizarParcialProdutoInsumosSemInsumo(){
+        var request = new ProdutoRequest(null, null, null, CategoriaEnum.PRODUTO_INSUMOS,
+                null, null, null, null);
+        when(produtosRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(produto));
+
+        var ex = assertThrows(ResponseStatusException.class,
+                () -> produtosService.atualizarProdutoParcial(1L, request));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals(ProdutosService.MSG_PRODUTO_INSUMO_SEM_INSUMO, ex.getReason());
+        verify(produtosRepository, never()).save(any());
     }
 }
