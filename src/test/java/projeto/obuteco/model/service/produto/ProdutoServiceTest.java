@@ -1,9 +1,12 @@
 package projeto.obuteco.model.service.produto;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -30,7 +33,6 @@ import static org.mockito.Mockito.*;
 
 // @SpringBootTest
 @ExtendWith(MockitoExtension.class)
-
 class ProdutoServiceTest {
     @Mock
     private ProdutosRepository produtosRepository;
@@ -85,6 +87,22 @@ class ProdutoServiceTest {
             BigDecimal.valueOf(9.99),
             "Teste Prod",
             List.of()
+    );
+
+    ProdutoRequest prodInsumosRequest = new ProdutoRequest(
+            1L,
+            "Espetinho de Frango",
+            EStatus.ATIVO,
+            CategoriaEnum.PRODUTO_INSUMOS,
+            GrupoEnum.INGREDIENTE,
+            BigDecimal.valueOf(9.99),
+            "Teste Prod",
+            List.of(
+                    insumosRequest = new ProdutoRequest.InsumosRequest(
+                            2L,
+                            BigDecimal.valueOf(200)
+                    )
+            )
     );
 
     ProdutoRequest.InsumosRequest insumosRequest = new ProdutoRequest.InsumosRequest(
@@ -402,5 +420,85 @@ class ProdutoServiceTest {
         assertEquals(EStatus.ATIVO, produto.getStatus());
         assertEquals(null, produto.getDeletedAt());
         verify(produtosRepository).save(produto);
+    }
+
+    // | --------------------- [CADASTRAAR]
+
+    @Test
+    @DisplayName("Salva produto do tipo normal")
+    void salvarProdutoNormal(){
+        when(produtosRepository.save(any(ProdutosEntity.class)))
+                .thenAnswer( i -> {
+                    ProdutosEntity p = i.getArgument(0);
+                    p.setId(1L);
+                    return p;
+                });
+
+        var newProd = produtosService.salvarProduto(prodRequest);
+        verify(produtosRepository).save(produtoCaptor.capture());
+
+        var salvo = produtoCaptor.getValue();
+
+        assertEquals("Espetinho de Frango", salvo.getNome());
+        assertEquals(EStatus.ATIVO, salvo.getStatus());
+        assertEquals(CategoriaEnum.NORMAL, salvo.getCategoriaEnum());
+        assertEquals(GrupoEnum.COMIDA, salvo.getGrupo());
+        assertEquals(BigDecimal.valueOf(9.99), salvo.getPrecoVenda());
+        assertEquals("Teste Prod", salvo.getObservacao());
+        assertTrue(salvo.getInsumosEntity().isEmpty());
+
+        assertEquals(1L, newProd.getId());
+    }
+
+    @Test
+    @DisplayName("Salva produto do tipo normal")
+    void salvarProdutoComInsumo(){
+        when(produtosRepository.findById(2L)).thenReturn(Optional.of(insumo));
+
+        when(produtosRepository.save(any(ProdutosEntity.class)))
+                .thenAnswer( i -> {
+                    ProdutosEntity p = i.getArgument(0);
+                    p.setId(1L);
+                    return p;
+                });
+
+        var newProd = produtosService.salvarProduto(prodInsumosRequest);
+        verify(produtosRepository).save(produtoCaptor.capture());
+
+        var salvo = produtoCaptor.getValue();
+
+        assertEquals("Espetinho de Frango", salvo.getNome());
+        assertEquals(EStatus.ATIVO, salvo.getStatus());
+        assertEquals(CategoriaEnum.PRODUTO_INSUMOS, salvo.getCategoriaEnum());
+        assertEquals(GrupoEnum.INGREDIENTE, salvo.getGrupo());
+        assertEquals(BigDecimal.valueOf(9.99), salvo.getPrecoVenda());
+        assertEquals("Teste Prod", salvo.getObservacao());
+        assertTrue(salvo.getInsumosEntity().isEmpty());
+
+        assertEquals(1L, newProd.getId());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @DisplayName("Lança BAD_REQUEST ao salvar produto PRODUTO_INSUMOS sem insumos")
+    void salvarProdutoComInsumoSemInsumo(List<ProdutoRequest.InsumosRequest> insumos) {
+        var request = new ProdutoRequest(
+                1L,
+                "Espetinho de Frango",
+                EStatus.ATIVO,
+                CategoriaEnum.PRODUTO_INSUMOS,
+                GrupoEnum.INGREDIENTE,
+                BigDecimal.valueOf(9.99),
+                "Teste Prod",
+                insumos
+        );
+
+        var ex = assertThrows(ResponseStatusException.class,
+                () -> produtosService.salvarProduto(request));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals(ProdutosService.MSG_PRODUTO_INSUMO_SEM_INSUMO, ex.getReason());
+
+        verify(produtosRepository, never()).save(any());
     }
 }
