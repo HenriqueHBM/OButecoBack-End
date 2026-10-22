@@ -94,30 +94,30 @@ public class ProdutosService {
         }
     }
 
-    //CREATE
-    @Transactional
-    public ProdutosEntity salvarProduto(ProdutoRequest request){
-        ProdutosEntity produto = new ProdutosEntity();
-        produto.setNome(request.nome());
-        produto.setStatus(EStatus.ATIVO);
+        //CREATE
+        @Transactional
+        public ProdutosEntity salvarProduto(ProdutoRequest request){
+            ProdutosEntity produto = new ProdutosEntity();
+            produto.setNome(request.nome());
+            produto.setStatus(EStatus.ATIVO);
 
-        produto.setCategoriaEnum(request.categoriaEnum());
-        produto.setGrupo(request.grupoEnum());
-        produto.setPrecoVenda(request.precoVenda());
-        produto.setObservacao(request.observacao());
+            produto.setCategoriaEnum(request.categoriaEnum());
+            produto.setGrupo(request.grupoEnum());
+            produto.setPrecoVenda(request.precoVenda());
+            produto.setObservacao(request.observacao());
 
-        //caso for da categoria de "PRODUTO_INSUMOS"
-        if(request.categoriaEnum() == CategoriaEnum.PRODUTO_INSUMOS){
-            if(request.insumos() == null || request.insumos().isEmpty()){
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MSG_PRODUTO_INSUMO_SEM_INSUMO);
+            //caso for da categoria de "PRODUTO_INSUMOS"
+            if(request.categoriaEnum() == CategoriaEnum.PRODUTO_INSUMOS){
+                if(request.insumos() == null || request.insumos().isEmpty()){
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MSG_PRODUTO_INSUMO_SEM_INSUMO);
+                }
+                this.aplicarInsumos(produto, request.insumos());
             }
-            this.aplicarInsumos(produto, request.insumos());
+
+            log.info("Produto criado: {}", produto);
+            return this.produtosRepository.save(produto);
+
         }
-
-        log.info("Produto criado: {}", produto);
-        return this.produtosRepository.save(produto);
-
-    }
 
     //UPDATE Geral
     @Transactional
