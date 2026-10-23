@@ -29,9 +29,8 @@ public class ProdutosController {
     //CREATE
     @PostMapping()
     public ResponseEntity<ProdutoResponse>salvarProduto(@Valid @RequestBody ProdutoRequest request){
-        log.info("Solicitação de cadastro de produto. Nome: {}, Categoria: {}",
-                request.nome(),
-                request.categoriaEnum());
+        log.info("Solicitação de cadastro de produto. {}",
+                request);
 
         ProdutosEntity produtosEntity = this.produtosService.salvarProduto(request);
 

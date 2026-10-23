@@ -1,7 +1,7 @@
 package projeto.obuteco.controller.usuario.dto;
 
-import projeto.obuteco.model.Enum.CargoEnum;
-import projeto.obuteco.model.Enum.EStatus;
+import projeto.obuteco.model.enums.CargoEnum;
+import projeto.obuteco.model.enums.EStatus;
 import projeto.obuteco.model.entity.usuario.UsuariosEntity;
 
 import java.sql.Timestamp;
@@ -25,8 +25,8 @@ public record UsuariosResponse(
                 usuariosEntity.getSenha(),
                 usuariosEntity.getStatus(),
                 usuariosEntity.getCargo(),
-                usuariosEntity.getCreated_at(),
-                usuariosEntity.getUpdated_at(),
+                usuariosEntity.getCreatedAt(),
+                usuariosEntity.getUpdatedAt(),
                 usuariosEntity.getDeletedAt()
         );
     }

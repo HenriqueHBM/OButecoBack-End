@@ -10,10 +10,10 @@ import projeto.obuteco.model.entity.estoque.EstoquesEntity;
 import projeto.obuteco.model.entity.produto.ProdutosEntity;
 import projeto.obuteco.model.repository.estoque.ConversoesRepository;
 import projeto.obuteco.model.repository.estoque.EstoquesRepository;
-import projeto.obuteco.model.repository.produto.ProdutosRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import projeto.obuteco.model.service.produto.ProdutosService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -22,13 +22,13 @@ import java.util.List;
 public class EstoquesService {
     private static final Logger log = LoggerFactory.getLogger(EstoquesService.class);
 
+    private final ProdutosService produtosService;
     private final EstoquesRepository estoquesRepository;
-    private final ProdutosRepository produtosRepository;
     private final ConversoesRepository conversoesRepository;
 
-    public EstoquesService(EstoquesRepository estoquesRepository, ProdutosRepository produtosRepository, ConversoesRepository conversoesRepository) {
+    public EstoquesService(ProdutosService produtosService, EstoquesRepository estoquesRepository, ConversoesRepository conversoesRepository) {
+        this.produtosService = produtosService;
         this.estoquesRepository = estoquesRepository;
-        this.produtosRepository = produtosRepository;
         this.conversoesRepository = conversoesRepository;
     }
 
@@ -44,31 +44,26 @@ public class EstoquesService {
         );
     }
 
+    public ConversoesEntity buscarConversaoPorId(Long id){
+        log.info("Buscando conversao pelo ID: {}", id);
+        return this.conversoesRepository.findById(id).orElseThrow(
+                () -> {
+                    log.warn("Conversão não encontrada.ID: {}", id);
+
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Conversão não encontrada com id");
+                }
+        );
+    }
+
+
     @Transactional
     public EstoquesEntity salvarEstoque(EstoquesRequest estoquesRequest){
-        log.info("Iniciando criação de estoque. Produto: {}, Quantidade: {}, Conversão: {}, Local: {}",
-                estoquesRequest.fk_id_produto(),
-                estoquesRequest.qtdeEstoque(),
-                estoquesRequest.fk_id_conversao(),
-                estoquesRequest.local());
+        log.info("Iniciando criação de estoque: {}", estoquesRequest);
 
-        ProdutosEntity produto = produtosRepository.findById(estoquesRequest.fk_id_produto()).orElseThrow(
-                () -> {
-                    log.warn("Produto não encontrado ao criar estoque. ID: {}", estoquesRequest.fk_id_produto());
+        ProdutosEntity produto = produtosService.buscarProdutoPorId(estoquesRequest.fk_id_produto());
 
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Produto nao encontrado com id.");
-                }
-        );
-
-        ConversoesEntity conversao = conversoesRepository.findById(estoquesRequest.fk_id_conversao()).orElseThrow(
-                () -> {
-                    log.warn("Conversão não encontrada ao criar estoque. ID: {}", estoquesRequest.fk_id_conversao());
-
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Conversao nao encontrada com id");
-                }
-        );
+        ConversoesEntity conversao = buscarConversaoPorId(estoquesRequest.fk_id_conversao());
 
         EstoquesEntity estoquesEntity = new EstoquesEntity();
 

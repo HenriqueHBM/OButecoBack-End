@@ -1,5 +1,5 @@
 package projeto.obuteco.controller.login.dto;
-import projeto.obuteco.model.Enum.CargoEnum;
+import projeto.obuteco.model.enums.CargoEnum;
 import projeto.obuteco.model.entity.usuario.UsuariosEntity;
 public record LoginResponse(
         Long id,

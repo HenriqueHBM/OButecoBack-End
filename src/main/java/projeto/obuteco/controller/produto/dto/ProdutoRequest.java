@@ -4,9 +4,9 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import projeto.obuteco.model.Enum.CategoriaEnum;
-import projeto.obuteco.model.Enum.EStatus;
-import projeto.obuteco.model.Enum.GrupoEnum;
+import projeto.obuteco.model.enums.CategoriaEnum;
+import projeto.obuteco.model.enums.EStatus;
+import projeto.obuteco.model.enums.GrupoEnum;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -30,20 +30,7 @@ public record ProdutoRequest(
         @Valid
         List<InsumosRequest> insumos
 ) {
-    /*
-    public static ProdutoRequest de(ProdutosEntity produtosEntity){
-        return new ProdutoRequest(
-                produtosEntity.getId(),
-                produtosEntity.getNome(),
-                produtosEntity.getStatus(),
-                produtosEntity.getCategoriaEnum(),
-                produtosEntity.getGrupo(),
-                produtosEntity.getPrecoVenda(),
-                produtosEntity.getObservacao(),
-                produtosEntity.getInsumos()
-        );
-    }
-    */
+
     public record InsumosRequest(
             @NotNull(message = "Insumo é obrigatório")
             Long insumoId,
