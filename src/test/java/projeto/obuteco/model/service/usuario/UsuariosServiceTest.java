@@ -1,6 +1,6 @@
 package projeto.obuteco.model.service.usuario;
 
-import lombok.RequiredArgsConstructor;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,19 +9,14 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import projeto.obuteco.controller.usuario.dto.UsuariosRequest;
 import projeto.obuteco.model.entity.usuario.UsuariosEntity;
 import projeto.obuteco.model.enums.CargoEnum;
-import projeto.obuteco.model.enums.CategoriaEnum;
 import projeto.obuteco.model.enums.EStatus;
-import projeto.obuteco.model.enums.GrupoEnum;
 import projeto.obuteco.model.repository.usuario.UsuariosRepository;
 
-import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,11 +36,22 @@ class UsuariosServiceTest {
     private UsuariosRepository usuariosRepository;
 
     UsuariosEntity usuario = new UsuariosEntity(
-            1L, "Ana", "Ana123", "Ana123", EStatus.ATIVO
+            1L,
+            "Ana",
+            "Ana123",
+            "Ana123",
+            EStatus.ATIVO
     );
 
     UsuariosRequest userRequest = new UsuariosRequest(
-            1L, "Ana", "Ana123", "Ana123", CargoEnum.ADMIN, null, null, null
+            1L,
+            "Ana",
+            "Ana123",
+            "Ana123",
+            CargoEnum.ADMIN,
+            null,
+            null,
+            null
     );
     @Test
     @DisplayName("verifica se retorna usuario")
@@ -182,7 +188,6 @@ class UsuariosServiceTest {
     }
 
     @Test
-    @DisplayName("")
     void atualizarUsuario(){
 
         when(usuariosRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(usuario));
@@ -288,7 +293,7 @@ class UsuariosServiceTest {
     }
 
     @Test
-    @DisplayName("")
+    @DisplayName("Atualizar o usuario parcialmente para outro usuario")
     void atualizarUsuarioParcialUsuarioDiferente() {
         when(usuariosRepository.findByIdAndDeletedAtIsNull(1L))
                 .thenReturn(Optional.of(usuario));
