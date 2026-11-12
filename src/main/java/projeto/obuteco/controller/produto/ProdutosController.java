@@ -3,6 +3,7 @@ package projeto.obuteco.controller.produto;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import projeto.obuteco.controller.produto.dto.ProdutoRequest;
 import projeto.obuteco.controller.produto.dto.ProdutoResponse;
@@ -28,6 +29,7 @@ public class ProdutosController {
 
     //CREATE
     @PostMapping()
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'CAIXA')")
     public ResponseEntity<ProdutoResponse>salvarProduto(@Valid @RequestBody ProdutoRequest request){
         log.info("Solicitação de cadastro de produto. {}",
                 request);

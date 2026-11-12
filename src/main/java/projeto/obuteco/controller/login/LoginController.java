@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/login")
-@CrossOrigin("http://localhost:4200")
+@CrossOrigin("*")
 public class LoginController {
     private static final Logger log = LoggerFactory.getLogger(LoginController.class);
 
@@ -25,15 +25,19 @@ public class LoginController {
     }
 
     @PostMapping()
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+    public String login(@Valid @RequestBody LoginRequest loginRequest) {
         log.info("Solicitação de login. Usuário: {}", loginRequest);
 
-        UsuariosEntity usuario = loginService.autenticaoDoLogin(loginRequest);
+        return loginService.autenticaoDoLogin(loginRequest).toString();
 
+        /*
         log.info("Login realizado com sucesso. Usuário: {}, ID: {}",
                 usuario.getUsuario(),
                 usuario.getId());
 
-        return new ResponseEntity<>(LoginResponse.de(usuario), HttpStatus.OK);
+
+        return new ResponseEntity<>(HttpStatus.OK, "Sucesso");
+
+         */
     }
 }
