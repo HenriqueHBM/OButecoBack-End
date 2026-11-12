@@ -1,6 +1,9 @@
 package projeto.obuteco.model.service.usuario;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import projeto.obuteco.controller.usuario.dto.UsuariosRequest;
@@ -15,7 +18,7 @@ import java.sql.Timestamp;
 import java.util.List;
 
 @Service
-public class UsuariosService {
+public class UsuariosService implements UserDetailsService {
     private static final Logger log = LoggerFactory.getLogger(UsuariosService.class);
 
     public UsuariosService(UsuariosRepository usuariosRepository) {
@@ -23,6 +26,15 @@ public class UsuariosService {
     }
 
     private final UsuariosRepository usuariosRepository;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return usuariosRepository.findByUsuarioAndDeletedAtIsNull(username)
+                .orElseThrow(() -> {
+                    log.warn("Tentativa de login com usuário inexistente: "+ username);
+
+                    return new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario ou senha invalidos");});
+    }
 
     public UsuariosEntity buscarUsuarioPorId(Long id){
         log.info("Buscando usuário pelo ID: {}", id);
