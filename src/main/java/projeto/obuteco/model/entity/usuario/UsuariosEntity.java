@@ -82,7 +82,8 @@ public class UsuariosEntity implements UserDetails  {
 
     @Override
     public boolean isEnabled() {
-        return UserDetails.super.isEnabled();
+        return this.status == EStatus.ATIVO;
+        // return UserDetails.super.isEnabled();
     }
 
     @Override

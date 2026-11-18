@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import projeto.obuteco.controller.login.dto.LoginRequest;
 import projeto.obuteco.controller.login.dto.LoginResponse;
 import projeto.obuteco.model.entity.usuario.UsuariosEntity;
@@ -25,19 +26,9 @@ public class LoginController {
     }
 
     @PostMapping()
-    public String login(@Valid @RequestBody LoginRequest loginRequest) {
-        log.info("Solicitação de login. Usuário: {}", loginRequest);
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+        log.info("Solicitação de login. Usuário: {}", loginRequest.usuario());
 
-        return loginService.autenticaoDoLogin(loginRequest).toString();
-
-        /*
-        log.info("Login realizado com sucesso. Usuário: {}, ID: {}",
-                usuario.getUsuario(),
-                usuario.getId());
-
-
-        return new ResponseEntity<>(HttpStatus.OK, "Sucesso");
-
-         */
+        return new ResponseEntity<>(loginService.autenticaoDoLogin(loginRequest), HttpStatus.OK);
     }
 }
