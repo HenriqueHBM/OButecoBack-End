@@ -3,6 +3,7 @@ package projeto.obuteco.model.infra.spring.security;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import projeto.obuteco.model.entity.usuario.UsuariosEntity;
@@ -16,7 +17,7 @@ public class JwtService {
     private final String issuer;
 
     public JwtService(
-            @Value("${api.security.token.secret:token}") String secret,
+            @Value("${api.security.token.secret}") String secret,
             @Value("${api.security.token.issuer:o-buteco}") String issuer
     ){
         this.algorithm = Algorithm.HMAC256(secret);
@@ -48,8 +49,8 @@ public class JwtService {
                     .verify(token)
                     .getSubject();
 
-        } catch (JWTCreationException e){
-            throw new IllegalStateException("Token Invalido");
+        } catch (JWTVerificationException e){
+            return null;
         }
     }
 }

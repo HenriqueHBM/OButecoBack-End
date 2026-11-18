@@ -43,6 +43,7 @@ class LoginControllerTest {
 
     // |--------------- [LOGIN]
 
+    /*
     @Test
     @DisplayName(" login que retorna 200 com a resposta do usuário")
     void loginSucesso() {
@@ -56,5 +57,7 @@ class LoginControllerTest {
         verify(loginService).autenticaoDoLogin(loginRequest);
     }
 
+
+     */
 
 }

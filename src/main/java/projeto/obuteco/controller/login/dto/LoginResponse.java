@@ -2,13 +2,12 @@ package projeto.obuteco.controller.login.dto;
 import projeto.obuteco.model.enums.CargoEnum;
 import projeto.obuteco.model.entity.usuario.UsuariosEntity;
 public record LoginResponse(
+        String token,
         Long id,
-        String nome,
-        String usuario,
-        CargoEnum cargo
+        String nome
 ) {
 
-
+    /*
     public static LoginResponse de(UsuariosEntity usuariosEntity) {
         return new LoginResponse(
                 usuariosEntity.getId(),
@@ -17,4 +16,6 @@ public record LoginResponse(
                 usuariosEntity.getCargo()
         );
     }
+
+     */
 }
