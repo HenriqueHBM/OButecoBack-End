@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import projeto.obuteco.controller.login.dto.LoginRequest;
 import projeto.obuteco.controller.login.dto.LoginResponse;
-import projeto.obuteco.model.entity.usuario.UsuariosEntity;
 import projeto.obuteco.model.service.usuario.LoginService;
 
 import org.slf4j.Logger;
@@ -14,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/login")
-@CrossOrigin("http://localhost:4200")
+@CrossOrigin("*")
 public class LoginController {
     private static final Logger log = LoggerFactory.getLogger(LoginController.class);
 
@@ -26,14 +25,8 @@ public class LoginController {
 
     @PostMapping()
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
-        log.info("Solicitação de login. Usuário: {}", loginRequest);
+        log.info("Solicitação de login. Usuário: {}", loginRequest.usuario());
 
-        UsuariosEntity usuario = loginService.autenticaoDoLogin(loginRequest);
-
-        log.info("Login realizado com sucesso. Usuário: {}, ID: {}",
-                usuario.getUsuario(),
-                usuario.getId());
-
-        return new ResponseEntity<>(LoginResponse.de(usuario), HttpStatus.OK);
+        return new ResponseEntity<>(loginService.autenticaoDoLogin(loginRequest), HttpStatus.OK);
     }
 }

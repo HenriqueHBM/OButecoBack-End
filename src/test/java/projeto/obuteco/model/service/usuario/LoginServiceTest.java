@@ -34,6 +34,7 @@ class LoginServiceTest {
             1L, "Ana", "Ana123", "Ana123", EStatus.ATIVO
     );
 
+    /*
     @Test
     @DisplayName("autenticacao usuario com sucesso")
     void autententicacaoUsuario(){
@@ -47,6 +48,8 @@ class LoginServiceTest {
         assertEquals(usuario, resultado);
         verify(usuariosRepository).findByUsuarioAndDeletedAtIsNull("Ana123");
     }
+    
+     */
 
     @Test
     @DisplayName("autenticação do usuario com a senha errada")

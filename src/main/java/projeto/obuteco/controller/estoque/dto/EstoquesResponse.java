@@ -7,13 +7,13 @@ import java.time.Instant;
 
 public record EstoquesResponse(
         Long id,
-        String produto,
-        Long fk_id_produto,
-        BigDecimal qtdeEstoque,
-        Long fk_id_conversao,
+        String product,
+        Long fk_id_product,
+        BigDecimal stockQuantity,
+        Long fk_id_conversion,
         String local,
-        Instant dataCriacao,
-        Instant dataAtualizado
+        Instant creationDate,
+        Instant updateDate
 ) {
     public static EstoquesResponse de(EstoquesEntity estoquesEntity) {
         return new EstoquesResponse(

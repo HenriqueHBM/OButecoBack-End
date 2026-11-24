@@ -7,19 +7,19 @@ import java.time.Instant;
 
 public record MovimentacoesEstoqueResponse(
         Long id,
-        Long fk_id_estoque,
-        String tipo,
-        BigDecimal qtde,
-        BigDecimal valorUnitario,
-        BigDecimal valorTotal,
-        Long fk_id_usuario,
-        String usuario,
-        String conversao,
-        String produto,
-        Long fk_id_conversao,
-        Long fk_id_produto,
-        String observacao,
-        Instant dataMovimentacao
+        Long fk_id_stock,
+        String type,
+        BigDecimal quantity,
+        BigDecimal unitPrice,
+        BigDecimal totalPrice,
+        Long fk_id_user,
+        String user,
+        String conversion,
+        String product,
+        Long fk_id_conversion,
+        Long fk_id_product,
+        String observation,
+        Instant movDate
 ) {
     public static MovimentacoesEstoqueResponse de(MovimentacoesEstoqueEntity entity) {
         return new MovimentacoesEstoqueResponse(
