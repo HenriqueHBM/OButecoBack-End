@@ -10,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 import projeto.obuteco.controller.usuario.dto.UsuariosRequest;
 import projeto.obuteco.model.entity.usuario.UsuariosEntity;
@@ -34,6 +35,9 @@ class UsuariosServiceTest {
 
     @Mock
     private UsuariosRepository usuariosRepository;
+
+    @Mock
+    PasswordEncoder passwordEncoder;
 
     UsuariosEntity usuario = new UsuariosEntity(
             1L,
@@ -151,6 +155,7 @@ class UsuariosServiceTest {
     @Test
     @DisplayName("salva usuario")
     void salvarUsusario(){
+        when(passwordEncoder.encode(any())).thenReturn("hash-bcrypt");
         when(usuariosRepository.save(any(UsuariosEntity.class)))
                 .thenAnswer(i -> {
                     UsuariosEntity p = i.getArgument(0);
@@ -165,7 +170,7 @@ class UsuariosServiceTest {
 
         assertEquals("Ana", salvo.getNome());
         assertEquals("Ana123", salvo.getUsuario());
-        assertEquals("Ana123", salvo.getSenha());
+        assertEquals("hash-bcrypt", salvo.getSenha());
         assertEquals(CargoEnum.ADMIN, salvo.getCargo());
         assertEquals(EStatus.ATIVO, salvo.getStatus());
 
@@ -189,7 +194,7 @@ class UsuariosServiceTest {
 
     @Test
     void atualizarUsuario(){
-
+        when(passwordEncoder.encode(any())).thenReturn("hash-bcrypt");
         when(usuariosRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(usuario));
         when(usuariosRepository.save(usuario)).thenReturn(usuario);
 
@@ -198,7 +203,7 @@ class UsuariosServiceTest {
         assertSame(usuario, atualizado);
         assertEquals("Ana", atualizado.getNome());
         assertEquals("Ana123", atualizado.getUsuario());
-        assertEquals("Ana123", atualizado.getSenha());
+        assertEquals("hash-bcrypt", atualizado.getSenha());
         assertEquals(CargoEnum.ADMIN, atualizado.getCargo());
         assertEquals(EStatus.ATIVO, atualizado.getStatus());
         verify(usuariosRepository, never()).findById(any());
@@ -251,6 +256,7 @@ class UsuariosServiceTest {
     @Test
     @DisplayName("atualiza a senha do usuario")
     void atualizarUsuarioParcialSenha() {
+        when(passwordEncoder.encode(any())).thenReturn("hash-bcrypt");
         when(usuariosRepository.findByIdAndDeletedAtIsNull(1L))
                 .thenReturn(Optional.of(usuario));
 
@@ -264,7 +270,7 @@ class UsuariosServiceTest {
 
         UsuariosEntity atualizado = usuariosService.atualizarUsuarioParcial(1L, request);
 
-        assertEquals("NovaSenha123", atualizado.getSenha());
+        assertEquals("hash-bcrypt", atualizado.getSenha());
         assertEquals("Ana", atualizado.getNome());
         assertEquals("Ana123", atualizado.getUsuario());
         verify(usuariosRepository).save(usuario);
