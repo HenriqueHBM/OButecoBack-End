@@ -65,7 +65,7 @@ public class MovimentacoesEstoqueService {
                 request.qtde(),
                 idUsuario);
 
-        return movimentar(TIPO_ENTRADA, request, () ->
+        return movimentar(TIPO_ENTRADA, request,idUsuario, () ->
                 estoquesRepository.findById(request.fk_id_estoque())
                         .orElseGet(() -> criarEstoqueSeProdutoInformado(request)));
     }
@@ -77,7 +77,7 @@ public class MovimentacoesEstoqueService {
                 request.qtde(),
                 idUsuario);
 
-        return movimentar(TIPO_SAIDA, request, () ->
+        return movimentar(TIPO_SAIDA, request, idUsuario, () ->
                 estoquesService.buscarEstoquePorId(request.fk_id_estoque()));
     }
 
