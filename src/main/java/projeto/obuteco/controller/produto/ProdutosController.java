@@ -29,7 +29,7 @@ public class ProdutosController {
 
     //CREATE
     @PostMapping()
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'CAIXA')")
+    @PreAuthorize("hasRole('GERENTE')")
     public ResponseEntity<ProdutoResponse>salvarProduto(@Valid @RequestBody ProdutoRequest request){
         log.info("Solicitação de cadastro de produto. {}",
                 request);
@@ -45,6 +45,7 @@ public class ProdutosController {
 
     //UPDATE
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('GERENTE')")
     public ResponseEntity<ProdutoResponse> atualizarProduto(
             @PathVariable Long id,
             @Valid @RequestBody ProdutoRequest request
@@ -60,6 +61,7 @@ public class ProdutosController {
 
     //UPDATE PARTIAL
     @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('GERENTE')")
     public ResponseEntity<ProdutoResponse> atualizarProdutoParcial(
             @PathVariable Long id,
             @Valid@RequestBody ProdutoRequest request
@@ -75,6 +77,7 @@ public class ProdutosController {
 
     //CHANGE STATUS
     @PatchMapping("change_status/{id}")
+    @PreAuthorize("hasRole('GERENTE')")
     public ResponseEntity<ProdutoResponse> atualizarStatusProduto(
             @PathVariable Long id
     ){
@@ -89,6 +92,7 @@ public class ProdutosController {
 
     //DELETE
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('GERENTE')")
     public ResponseEntity<ProdutoResponse> deletarProduto(
             @PathVariable Long id
     ){
@@ -103,6 +107,7 @@ public class ProdutosController {
 
     //READ/LIST
     @GetMapping()
+    @PreAuthorize("hasRole('ESTAGIARIO')")
     public ResponseEntity<List<ProdutoResponse>> listarProdutos(){
         log.info("Solicitação de consulta de produtos");
 
@@ -119,6 +124,7 @@ public class ProdutosController {
 
     //FIND BY ID
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ESTAGIARIO')")
     public ResponseEntity<ProdutoResponse> buscarPorId (@PathVariable Long id) {
         ProdutosEntity produto = this.produtosService.buscarProdutoPorId(id);
         return new ResponseEntity<>(ProdutoResponse.de(produto), HttpStatus.OK);

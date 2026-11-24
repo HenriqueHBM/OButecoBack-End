@@ -8,13 +8,13 @@ import java.sql.Timestamp;
 
 public record UsuariosResponse(
         Long id,
-        String nome,
-        String usuario,
+        String name,
+        String user,
         EStatus status,
-        CargoEnum cargo,
-        Timestamp created_at,
-        Timestamp updated_at,
-        Timestamp deleted_at
+        CargoEnum role,
+        Timestamp creationDate,
+        Timestamp updateDate,
+        Timestamp deleteDate
 ) {
     public static UsuariosResponse de(UsuariosEntity usuariosEntity) {
         return new UsuariosResponse(
