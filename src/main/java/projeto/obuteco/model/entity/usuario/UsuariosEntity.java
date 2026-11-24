@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import projeto.obuteco.model.enums.CargoEnum;
 import projeto.obuteco.model.enums.EStatus;
@@ -35,13 +36,15 @@ public class UsuariosEntity implements UserDetails  {
     private String usuario;
 
     @Column(name = "senha", nullable = false)
+    @ToString.Exclude
     private String senha;
 
     @Column(name = "status", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private EStatus status;
 
-    @Column(name = "cargo")
+    @Column(name = "cargo", nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
     private CargoEnum cargo;
 
     @CreationTimestamp
@@ -88,7 +91,8 @@ public class UsuariosEntity implements UserDetails  {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
+        if (cargo == null) return List.of();
+        return List.of(new SimpleGrantedAuthority("ROLE_" + cargo.name()));
     }
 
     @Override

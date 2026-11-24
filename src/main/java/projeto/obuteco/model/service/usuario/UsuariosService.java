@@ -52,7 +52,7 @@ public class UsuariosService implements UserDetailsService {
     }
 
     public UsuariosEntity salvarUsuario(UsuariosRequest usuariosRequest) {
-        log.info("Criando usuário. Usuário: {}", usuariosRequest);
+        log.info("Criando usuário. Usuário: {}", usuariosRequest.usuario());
 
         if (usuariosRepository.findByUsuarioAndDeletedAtIsNull(usuariosRequest.usuario()).isPresent()) {
             log.warn("Tentativa de cadastro de usuário já existente. Usuário: {}",

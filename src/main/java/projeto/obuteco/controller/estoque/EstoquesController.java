@@ -3,12 +3,15 @@ package projeto.obuteco.controller.estoque;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import projeto.obuteco.controller.estoque.dto.EstoquesRequest;
 import projeto.obuteco.controller.estoque.dto.EstoquesResponse;
 import projeto.obuteco.controller.estoque.dto.MovimentacoesEstoqueRequest;
 import projeto.obuteco.controller.estoque.dto.MovimentacoesEstoqueResponse;
 import projeto.obuteco.model.entity.estoque.EstoquesEntity;
+import projeto.obuteco.model.entity.usuario.UsuariosEntity;
 import projeto.obuteco.model.service.estoque.*;
 
 import org.slf4j.Logger;
@@ -34,6 +37,7 @@ public class EstoquesController {
 
     //--------------------------------------Estoque--------------------------------------//
     @GetMapping
+    @PreAuthorize("hasRole('ESTAGIARIO')")
     public ResponseEntity<List<EstoquesResponse>> listarEstoques() {
         log.info("Listar estoques");
 
@@ -48,6 +52,7 @@ public class EstoquesController {
     }
 
     @PostMapping()
+    @PreAuthorize("hasRole('GERENTE')")
     public ResponseEntity<EstoquesResponse> salvarEstoque(@Valid @RequestBody EstoquesRequest estoquesRequest) {
         log.info("Iniciando cadastro de estoques. Produto: {}, Quantidade: {}",
                 estoquesRequest.fk_id_produto(),
@@ -65,6 +70,7 @@ public class EstoquesController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ESTAGIARIO')")
     public ResponseEntity<EstoquesResponse> buscarPorId (@PathVariable Long id) {
         EstoquesEntity estoque = this.estoqueService.buscarEstoquePorId(id);
         return new ResponseEntity<>(EstoquesResponse.de(estoque), HttpStatus.OK);
@@ -72,14 +78,16 @@ public class EstoquesController {
 
     //------------------------------------Movimentacoes------------------------------------//
     @PostMapping("/movimentacoes/entrada")
+    @PreAuthorize("hasRole('AUXILIAR')")
     public ResponseEntity<MovimentacoesEstoqueResponse> entrada(
-            @Valid @RequestBody MovimentacoesEstoqueRequest movimentacoesEstoqueRequest){
+            @Valid @RequestBody MovimentacoesEstoqueRequest movimentacoesEstoqueRequest,
+            @AuthenticationPrincipal UsuariosEntity usuarioLogado){
         log.info("Solicitação de entrada de estoque. Estoque: {}, Quantidade: {}, Usuário: {}",
                 movimentacoesEstoqueRequest.fk_id_estoque(),
                 movimentacoesEstoqueRequest.qtde(),
-                movimentacoesEstoqueRequest.fk_id_usuario());
+                usuarioLogado.getId());
 
-        var entrada = movimentacoesEstoqueService.entrada(movimentacoesEstoqueRequest);
+        var entrada = movimentacoesEstoqueService.entrada(movimentacoesEstoqueRequest, usuarioLogado.getId());
 
         log.info("Entrada de estoque realizada com sucesso. Movimentação: {}", entrada.getId());
 
@@ -88,14 +96,16 @@ public class EstoquesController {
     }
 
     @PostMapping("/movimentacoes/saida")
+    @PreAuthorize("hasRole('AUXILIAR')")
     public ResponseEntity<MovimentacoesEstoqueResponse> saida(
-            @Valid @RequestBody MovimentacoesEstoqueRequest movimentacoesEstoqueRequest) {
+            @Valid @RequestBody MovimentacoesEstoqueRequest movimentacoesEstoqueRequest,
+            @AuthenticationPrincipal UsuariosEntity usuarioLogado) {
         log.info("Solicitação de saída de estoque. Estoque: {}, Quantidade: {}, Usuário: {}",
                 movimentacoesEstoqueRequest.fk_id_estoque(),
                 movimentacoesEstoqueRequest.qtde(),
-                movimentacoesEstoqueRequest.fk_id_usuario());
+                usuarioLogado.getId());
 
-        var saida = movimentacoesEstoqueService.saida(movimentacoesEstoqueRequest);
+        var saida = movimentacoesEstoqueService.saida(movimentacoesEstoqueRequest, usuarioLogado.getId());
 
         log.info("Saída de estoque realizada com sucesso. Movimentação: {}", saida.getId());
 
@@ -104,15 +114,17 @@ public class EstoquesController {
     }
 
     @PostMapping("/movimentacoes/saida-insumo/{idProduto}")
+    @PreAuthorize("hasRole('AUXILIAR')")
     public ResponseEntity<Void> saidaInsumo(
             @PathVariable Long idProduto,
-            @Valid @RequestBody MovimentacoesEstoqueRequest movimentacoesEstoqueRequest) {
+            @Valid @RequestBody MovimentacoesEstoqueRequest movimentacoesEstoqueRequest,
+            @AuthenticationPrincipal UsuariosEntity usuarioLogado) {
         log.info("Solicitação de saída de insumos. Produto: {}, Quantidade: {}, Usuário: {}",
                 idProduto,
                 movimentacoesEstoqueRequest.qtde(),
-                movimentacoesEstoqueRequest.fk_id_usuario());
+                usuarioLogado.getId());
 
-        movimentacoesEstoqueService.saidaInsumo(idProduto, movimentacoesEstoqueRequest);
+        movimentacoesEstoqueService.saidaInsumo(idProduto, movimentacoesEstoqueRequest, usuarioLogado.getId());
 
         log.info("Saída de insumos realizada com sucesso. Produto: {}", idProduto);
 
@@ -120,6 +132,7 @@ public class EstoquesController {
     }
 
     @PatchMapping("/movimentacoes/{idMovimentacao}")
+    @PreAuthorize("hasRole('GERENTE')")
     public ResponseEntity<MovimentacoesEstoqueResponse> editarMovimentacao(
             @PathVariable Long idMovimentacao,
             @RequestBody MovimentacoesEstoqueRequest movimentacoesEstoqueRequest) {
@@ -133,6 +146,7 @@ public class EstoquesController {
     }
 
     @DeleteMapping("/movimentacoes/{idMovimentacao}")
+    @PreAuthorize("hasRole('GERENTE')")
     public ResponseEntity<Void> deletarMovimentacao(@PathVariable Long idMovimentacao){
         log.info("Solicitação de exclusão de movimentação. ID: {}", idMovimentacao);
 
@@ -144,6 +158,7 @@ public class EstoquesController {
     }
 
     @GetMapping("/movimentacoes/historico")
+    @PreAuthorize("hasRole('ESTAGIARIO')")
     public ResponseEntity<List<MovimentacoesEstoqueResponse>> historicoMovimentacoes(){
         log.info("Solicitação de consulta do histórico de movimentações");
 
@@ -158,6 +173,7 @@ public class EstoquesController {
     }
 
     @GetMapping("/movimentacoes/historico/{idEstoque}")
+    @PreAuthorize("hasRole('ESTAGIARIO')")
     public ResponseEntity<List<MovimentacoesEstoqueResponse>> historicoMovimentacoesPorEstoque(@PathVariable Long idEstoque){
         log.info("Solicitação de consulta do histórico. Estoque: {}", idEstoque);
 

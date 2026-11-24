@@ -58,12 +58,12 @@ public class MovimentacoesEstoqueService {
     // ===================== OPERAÇÕES PRINCIPAIS =====================
 
     @Transactional
-    public MovimentacoesEstoqueEntity entrada(MovimentacoesEstoqueRequest request) {
+    public MovimentacoesEstoqueEntity entrada(MovimentacoesEstoqueRequest request, Long idUsuario) {
         log.info("Iniciando entrada de estoque. Estoque: {}, Produto: {}, Quantidade: {}, Usuário: {}",
                 request.fk_id_estoque(),
                 request.fk_id_produto(),
                 request.qtde(),
-                request.fk_id_usuario());
+                idUsuario);
 
         return movimentar(TIPO_ENTRADA, request, () ->
                 estoquesRepository.findById(request.fk_id_estoque())
@@ -71,24 +71,24 @@ public class MovimentacoesEstoqueService {
     }
 
     @Transactional
-    public MovimentacoesEstoqueEntity saida(MovimentacoesEstoqueRequest request) {
+    public MovimentacoesEstoqueEntity saida(MovimentacoesEstoqueRequest request, Long idUsuario) {
         log.info("Iniciando saída de estoque. Estoque: {}, Quantidade: {}, Usuário: {}",
                 request.fk_id_estoque(),
                 request.qtde(),
-                request.fk_id_usuario());
+                idUsuario);
 
         return movimentar(TIPO_SAIDA, request, () ->
                 estoquesService.buscarEstoquePorId(request.fk_id_estoque()));
     }
 
     @Transactional
-    public void saidaInsumo(Long idProduto, MovimentacoesEstoqueRequest request) {
+    public void saidaInsumo(Long idProduto, MovimentacoesEstoqueRequest request, Long idUsuario) {
         log.info("Iniciando saída de insumos. Produto: {}, Quantidade solicitada: {}, Usuário: {}",
                 idProduto,
                 request.qtde(),
-                request.fk_id_usuario());
+                idUsuario);
 
-        UsuariosEntity usuario = usuariosService.buscarUsuarioPorId(request.fk_id_usuario());
+        UsuariosEntity usuario = usuariosService.buscarUsuarioPorId(idUsuario);
         ProdutosEntity produto = produtosService.buscarProdutoPorId(request.fk_id_produto());
 
         List<InsumosProdutoEntity> insumos = insumosProdutoRepository.findAllByProdutosEntity(produto);
@@ -248,8 +248,9 @@ public class MovimentacoesEstoqueService {
 
     public MovimentacoesEstoqueEntity movimentar(String tipo,
                                                   MovimentacoesEstoqueRequest request,
+                                                  Long idUsuario,
                                                   Supplier<EstoquesEntity> estoqueSupplier) {
-        UsuariosEntity usuario = usuariosService.buscarUsuarioPorId(request.fk_id_usuario());
+        UsuariosEntity usuario = usuariosService.buscarUsuarioPorId(idUsuario);
         EstoquesEntity estoque = estoqueSupplier.get();
 
         ConversoesEntity conversao = estoquesService.buscarConversaoPorId(request.fk_id_conversao());

@@ -4,10 +4,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import projeto.obuteco.controller.login.dto.LoginRequest;
 import projeto.obuteco.controller.login.dto.LoginResponse;
-import projeto.obuteco.model.entity.usuario.UsuariosEntity;
 import projeto.obuteco.model.service.usuario.LoginService;
 
 import org.slf4j.Logger;
