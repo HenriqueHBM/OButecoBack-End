@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import projeto.obuteco.controller.endereco.EnderecoResponse;
+import projeto.obuteco.controller.usuario.dto.UsuariosAtualizacaoRequest;
 import projeto.obuteco.controller.usuario.dto.UsuariosRequest;
 import projeto.obuteco.controller.usuario.dto.UsuariosResponse;
 import projeto.obuteco.model.entity.usuario.UsuariosEntity;
@@ -48,7 +49,7 @@ public class UsuariosController {
 
     @PutMapping("/{id}")
     public ResponseEntity<UsuariosResponse> atualizarUsuario(@PathVariable Long id,
-                                                             @Valid @RequestBody UsuariosRequest usuariosRequest) {
+                                                             @Valid @RequestBody UsuariosAtualizacaoRequest usuariosRequest) {
         log.info("Solicitação de atualização de usuário. ID: {}", id);
 
         UsuariosEntity usuariosEntity = this.usuariosService.atualizarUsuario(id, usuariosRequest);
@@ -60,7 +61,7 @@ public class UsuariosController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<UsuariosResponse> atualizarUsuarioParcial(@PathVariable Long id,
-                                                                    @Valid @RequestBody UsuariosRequest usuariosRequest) {
+                                                                    @Valid @RequestBody UsuariosAtualizacaoRequest usuariosRequest) {
         log.info("Solicitação de atualização parcial de usuário. ID: {}", id);
 
         UsuariosEntity usuariosEntity = this.usuariosService.atualizarUsuarioParcial(id, usuariosRequest);

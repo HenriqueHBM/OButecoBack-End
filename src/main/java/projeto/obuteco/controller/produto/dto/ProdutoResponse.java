@@ -10,15 +10,15 @@ import java.sql.Timestamp;
 
 public record ProdutoResponse(
         Long id,
-        String nome,
+        String name,
         EStatus status,
-        CategoriaEnum categoriaEnum,
-        GrupoEnum grupoEnum,
-        BigDecimal precoVenda,
-        String observacao,
-        Timestamp created_at,
-        Timestamp updated_at,
-        Timestamp deleted_at
+        CategoriaEnum categoryEnum,
+        GrupoEnum groupEnum,
+        BigDecimal salePrice,
+        String observation,
+        Timestamp creationDate,
+        Timestamp updateDate,
+        Timestamp deletedDate
 ) {
     public static ProdutoResponse de(ProdutosEntity produtosEntity){
         return new ProdutoResponse(

@@ -457,7 +457,7 @@ class MovimentacoesEstoqueServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         //Act
-        var resultado = movimentacoesEstoqueService.saida(request);
+        var resultado = movimentacoesEstoqueService.saida(request, usuario.getId());
 
         //Assert
         verify(estoquesService).buscarEstoquePorId(1L);
@@ -484,7 +484,7 @@ class MovimentacoesEstoqueServiceTest {
 
         //Act
         var chamada = assertThrows(ResponseStatusException.class,
-                () -> movimentacoesEstoqueService.saida(request));
+                () -> movimentacoesEstoqueService.saida(request, usuario.getId()));
 
         //Assert
         assertEquals(HttpStatus.NOT_FOUND, chamada.getStatusCode());
@@ -502,7 +502,7 @@ class MovimentacoesEstoqueServiceTest {
 
         //Act
         var chamada = assertThrows(ResponseStatusException.class,
-                () -> movimentacoesEstoqueService.saida(request));
+                () -> movimentacoesEstoqueService.saida(request, usuario.getId()));
 
         //Assert
         assertEquals(HttpStatus.BAD_REQUEST, chamada.getStatusCode());
@@ -527,7 +527,7 @@ class MovimentacoesEstoqueServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         //Act
-        var resultado = movimentacoesEstoqueService.entrada(request);
+        var resultado = movimentacoesEstoqueService.entrada(request, usuario.getId());
 
         //Assert
         assertNotNull(resultado);
@@ -557,7 +557,7 @@ class MovimentacoesEstoqueServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         //Act
-        var resultado = movimentacoesEstoqueService.entrada(request);
+        var resultado = movimentacoesEstoqueService.entrada(request, usuario.getId());
 
         //Assert
         assertNotNull(resultado);
@@ -576,7 +576,7 @@ class MovimentacoesEstoqueServiceTest {
 
         //Act
         var excecao = assertThrows(ResponseStatusException.class,
-                () -> movimentacoesEstoqueService.entrada(request));
+                () -> movimentacoesEstoqueService.entrada(request, usuario.getId()));
 
         //Assert
         assertEquals(HttpStatus.NOT_FOUND, excecao.getStatusCode());
@@ -1073,7 +1073,7 @@ class MovimentacoesEstoqueServiceTest {
         when(estoquesRepository.findByProdutosEntity(queijo)).thenReturn(Optional.of(estoqueQueijo));
 
         //Act
-        movimentacoesEstoqueService.saidaInsumo(1L, request);
+        movimentacoesEstoqueService.saidaInsumo(1L, request, usuario.getId());
 
         //Assert
         assertEquals(0, BigDecimal.valueOf(300).compareTo(estoqueQueijo.getQntdEstoque()));
@@ -1110,7 +1110,7 @@ class MovimentacoesEstoqueServiceTest {
         when(estoquesRepository.findByProdutosEntity(molho)).thenReturn(Optional.of(estoqueMolho));
 
         //Act
-        movimentacoesEstoqueService.saidaInsumo(1L, request);
+        movimentacoesEstoqueService.saidaInsumo(1L, request, usuario.getId());
 
         //Assert
         assertEquals(0, BigDecimal.valueOf(300).compareTo(estoqueQueijo.getQntdEstoque()));
@@ -1137,7 +1137,7 @@ class MovimentacoesEstoqueServiceTest {
         when(estoquesRepository.findByProdutosEntity(queijo)).thenReturn(Optional.of(estoqueQueijo));
 
         //Act
-        movimentacoesEstoqueService.saidaInsumo(1L, request);
+        movimentacoesEstoqueService.saidaInsumo(1L, request, usuario.getId());
 
         //Assert
         assertEquals(0, BigDecimal.valueOf(300).compareTo(estoqueQueijo.getQntdEstoque()));
@@ -1160,7 +1160,7 @@ class MovimentacoesEstoqueServiceTest {
 
         //Act
         var chamada = assertThrows(ResponseStatusException.class,
-                () -> movimentacoesEstoqueService.saidaInsumo(1L, request));
+                () -> movimentacoesEstoqueService.saidaInsumo(1L, request, usuario.getId()));
 
         //Assert
         assertEquals(HttpStatus.BAD_REQUEST, chamada.getStatusCode());
@@ -1183,7 +1183,7 @@ class MovimentacoesEstoqueServiceTest {
 
         //Act
         var chamada = assertThrows(ResponseStatusException.class,
-                () -> movimentacoesEstoqueService.saidaInsumo(1L, request));
+                () -> movimentacoesEstoqueService.saidaInsumo(1L, request, usuario.getId()));
 
         //Assert
         assertEquals(HttpStatus.NOT_FOUND, chamada.getStatusCode());
@@ -1209,7 +1209,7 @@ class MovimentacoesEstoqueServiceTest {
 
         //Act
         var chamada = assertThrows(ResponseStatusException.class,
-                () -> movimentacoesEstoqueService.saidaInsumo(1L, request));
+                () -> movimentacoesEstoqueService.saidaInsumo(1L, request, usuario.getId()));
 
         //Assert
         assertEquals(HttpStatus.BAD_REQUEST, chamada.getStatusCode());
@@ -1229,7 +1229,7 @@ class MovimentacoesEstoqueServiceTest {
 
         //Act
         var chamada = assertThrows(ResponseStatusException.class,
-                () -> movimentacoesEstoqueService.saidaInsumo(1L, request));
+                () -> movimentacoesEstoqueService.saidaInsumo(1L, request, usuario.getId()));
 
         //Assert
         assertEquals(HttpStatus.NOT_FOUND, chamada.getStatusCode());
