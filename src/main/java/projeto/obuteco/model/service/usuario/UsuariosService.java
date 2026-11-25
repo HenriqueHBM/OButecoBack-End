@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import projeto.obuteco.controller.usuario.dto.UsuariosAtualizacaoRequest;
 import projeto.obuteco.controller.usuario.dto.UsuariosRequest;
 import projeto.obuteco.model.enums.EStatus;
 import projeto.obuteco.model.entity.usuario.UsuariosEntity;
@@ -78,7 +79,7 @@ public class UsuariosService implements UserDetailsService {
         return usuarioSalvo;
     }
 
-    public UsuariosEntity atualizarUsuario(Long id, UsuariosRequest usuariosRequest) {
+    public UsuariosEntity atualizarUsuario(Long id, UsuariosAtualizacaoRequest usuariosRequest) {
         log.info("Atualizando usuário. ID: {}", id);
 
         UsuariosEntity usuariosEntity = this.buscarUsuarioPorId(id);
@@ -92,7 +93,9 @@ public class UsuariosService implements UserDetailsService {
 
         usuariosEntity.setNome(usuariosRequest.nome());
         usuariosEntity.setUsuario(usuariosRequest.usuario());
-        usuariosEntity.setSenha(passwordEncoder.encode(usuariosRequest.senha()));
+        if (usuariosRequest.senha() != null && !usuariosRequest.senha().isBlank()) {
+            usuariosEntity.setSenha(passwordEncoder.encode(usuariosRequest.senha()));
+        }
         usuariosEntity.setCargo(usuariosRequest.cargoEnum());
 
 
@@ -122,7 +125,7 @@ public class UsuariosService implements UserDetailsService {
 
         return usuarioAtualizado;
     }
-    public UsuariosEntity atualizarUsuarioParcial(Long id, UsuariosRequest usuariosRequest) {
+    public UsuariosEntity atualizarUsuarioParcial(Long id, UsuariosAtualizacaoRequest usuariosRequest) {
         log.info("Iniciando atualização parcial do usuário. ID: {}", id);
 
         UsuariosEntity usuariosEntity = buscarUsuarioPorId(id);

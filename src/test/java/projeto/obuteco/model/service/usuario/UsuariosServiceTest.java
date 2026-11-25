@@ -17,6 +17,7 @@ import projeto.obuteco.model.entity.usuario.UsuariosEntity;
 import projeto.obuteco.model.enums.CargoEnum;
 import projeto.obuteco.model.enums.EStatus;
 import projeto.obuteco.model.repository.usuario.UsuariosRepository;
+import projeto.obuteco.controller.usuario.dto.UsuariosAtualizacaoRequest;
 
 import java.util.List;
 import java.util.Optional;
@@ -52,11 +53,9 @@ class UsuariosServiceTest {
             "Ana",
             "Ana123",
             "Ana123",
-            CargoEnum.ADMIN,
-            null,
-            null,
-            null
+            CargoEnum.ADMIN
     );
+
     @Test
     @DisplayName("verifica se retorna usuario")
     void buscarUsuariosPorId() {
@@ -193,12 +192,15 @@ class UsuariosServiceTest {
     }
 
     @Test
+    @DisplayName("PUT com senha nova: grava o hash")
     void atualizarUsuario(){
         when(passwordEncoder.encode(any())).thenReturn("hash-bcrypt");
         when(usuariosRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(usuario));
         when(usuariosRepository.save(usuario)).thenReturn(usuario);
 
-        var atualizado = usuariosService.atualizarUsuario(1L, userRequest);
+        var request = new UsuariosAtualizacaoRequest("Ana", "Ana123", "Ana123", CargoEnum.ADMIN);
+
+        var atualizado = usuariosService.atualizarUsuario(1L, request);
 
         assertSame(usuario, atualizado);
         assertEquals("Ana", atualizado.getNome());
@@ -210,13 +212,42 @@ class UsuariosServiceTest {
     }
 
     @Test
+    @DisplayName("PUT sem senha: mantém a senha atual e não chama o encoder")
+    void atualizarUsuarioSemSenha(){
+        when(usuariosRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(usuario));
+        when(usuariosRepository.save(usuario)).thenReturn(usuario);
+
+        var request = new UsuariosAtualizacaoRequest("Ana Maria", "Ana123", null, CargoEnum.GERENTE);
+
+        var atualizado = usuariosService.atualizarUsuario(1L, request);
+
+        assertEquals("Ana Maria", atualizado.getNome());
+        assertEquals(CargoEnum.GERENTE, atualizado.getCargo());
+        assertEquals("Ana123", atualizado.getSenha()); // senha original intacta
+        verify(passwordEncoder, never()).encode(any());
+    }
+
+    @Test
+    @DisplayName("PUT com senha em branco: também mantém a senha atual")
+    void atualizarUsuarioSenhaEmBranco(){
+        when(usuariosRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(usuario));
+        when(usuariosRepository.save(usuario)).thenReturn(usuario);
+
+        var request = new UsuariosAtualizacaoRequest("Ana", "Ana123", "  ", CargoEnum.ADMIN);
+
+        var atualizado = usuariosService.atualizarUsuario(1L, request);
+
+        assertEquals("Ana123", atualizado.getSenha());
+        verify(passwordEncoder, never()).encode(any());
+    }
+
+    @Test
     void atualizarUsuarioExistente() {
         when(usuariosRepository.findByIdAndDeletedAtIsNull(1L))
                 .thenReturn(Optional.of(usuario));
 
-        UsuariosRequest request = new UsuariosRequest(
-                1L, "Ana", "Carlos123", "Senha123",
-                CargoEnum.ADMIN, null, null, null
+        var request = new UsuariosAtualizacaoRequest(
+                "Ana", "Carlos123", "Senha123", CargoEnum.ADMIN
         );
 
         when(usuariosRepository.findByUsuarioAndDeletedAtIsNull("Carlos123"))
@@ -236,14 +267,10 @@ class UsuariosServiceTest {
     void atualizarUsuarioParcialNome() {
         when(usuariosRepository.findByIdAndDeletedAtIsNull(1L))
                 .thenReturn(Optional.of(usuario));
-
         when(usuariosRepository.save(any(UsuariosEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        UsuariosRequest request = new UsuariosRequest(
-                null, "Ana Maria", null, null,
-                null, null, null, null
-        );
+        var request = new UsuariosAtualizacaoRequest("Ana Maria", null, null, null);
 
         UsuariosEntity atualizado = usuariosService.atualizarUsuarioParcial(1L, request);
 
@@ -259,14 +286,10 @@ class UsuariosServiceTest {
         when(passwordEncoder.encode(any())).thenReturn("hash-bcrypt");
         when(usuariosRepository.findByIdAndDeletedAtIsNull(1L))
                 .thenReturn(Optional.of(usuario));
-
         when(usuariosRepository.save(any(UsuariosEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        UsuariosRequest request = new UsuariosRequest(
-                null, null, null, "NovaSenha123",
-                null, null, null, null
-        );
+        var request = new UsuariosAtualizacaoRequest(null, null, "NovaSenha123", null);
 
         UsuariosEntity atualizado = usuariosService.atualizarUsuarioParcial(1L, request);
 
@@ -281,14 +304,10 @@ class UsuariosServiceTest {
     void atualizarUsuarioParcialCargo() {
         when(usuariosRepository.findByIdAndDeletedAtIsNull(1L))
                 .thenReturn(Optional.of(usuario));
-
         when(usuariosRepository.save(any(UsuariosEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        UsuariosRequest request = new UsuariosRequest(
-                null, null, null, null,
-                CargoEnum.GERENTE, null, null, null
-        );
+        var request = new UsuariosAtualizacaoRequest(null, null, null, CargoEnum.GERENTE);
 
         UsuariosEntity atualizado = usuariosService.atualizarUsuarioParcial(1L, request);
 
@@ -308,9 +327,7 @@ class UsuariosServiceTest {
         when(usuariosRepository.save(any(UsuariosEntity.class)))
                 .thenAnswer(i -> i.getArgument(0));
 
-        UsuariosRequest request = new UsuariosRequest(
-                null, null, "Carlos123", null, null, null, null, null
-        );
+        var request = new UsuariosAtualizacaoRequest(null, "Carlos123", null, null);
 
         var atualizado = usuariosService.atualizarUsuarioParcial(1L, request);
 
@@ -325,9 +342,7 @@ class UsuariosServiceTest {
         when(usuariosRepository.findByUsuarioAndDeletedAtIsNull("Carlos123"))
                 .thenReturn(Optional.of(new UsuariosEntity()));
 
-        UsuariosRequest request = new UsuariosRequest(
-                null, null, "Carlos123", null, null, null, null, null
-        );
+        var request = new UsuariosAtualizacaoRequest(null, "Carlos123", null, null);
 
         var exception = assertThrows(ResponseStatusException.class,
                 () -> usuariosService.atualizarUsuarioParcial(1L, request));
@@ -344,9 +359,7 @@ class UsuariosServiceTest {
         when(usuariosRepository.save(any(UsuariosEntity.class)))
                 .thenAnswer(i -> i.getArgument(0));
 
-        UsuariosRequest request = new UsuariosRequest(
-                null, null, usuario.getUsuario(), null, null, null, null, null
-        );
+        var request = new UsuariosAtualizacaoRequest(null, usuario.getUsuario(), null, null);
 
         var atualizado = usuariosService.atualizarUsuarioParcial(1L, request);
 

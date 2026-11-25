@@ -15,10 +15,7 @@ public record UsuariosRequest(
         @NotBlank(message = "Senha é obrigatória")
         String senha,
         @NotNull(message = "Cargo é obrigatório")
-        CargoEnum cargoEnum,
-        Timestamp created_at,
-        Timestamp updated_at,
-        Timestamp deleted_at
+        CargoEnum cargoEnum
 ) {
     public static UsuariosRequest de(UsuariosEntity usuariosEntity) {
         return new UsuariosRequest(
@@ -26,10 +23,7 @@ public record UsuariosRequest(
                 usuariosEntity.getNome(),
                 usuariosEntity.getUsuario(),
                 usuariosEntity.getSenha(),
-                usuariosEntity.getCargo(),
-                usuariosEntity.getCreatedAt(),
-                usuariosEntity.getUpdatedAt(),
-                usuariosEntity.getDeletedAt()
+                usuariosEntity.getCargo()
         );
     }
 }
