@@ -22,7 +22,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/estoques")
-@CrossOrigin("http://localhost:4200")
+@CrossOrigin("*")
 public class EstoquesController {
 
     private static final Logger log = LoggerFactory.getLogger(EstoquesController.class);
