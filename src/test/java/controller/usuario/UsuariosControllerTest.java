@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import projeto.obuteco.controller.endereco.EnderecoResponse;
+import projeto.obuteco.controller.usuario.dto.UsuariosAtualizacaoRequest;
 import projeto.obuteco.controller.usuario.dto.UsuariosResponse;
 import projeto.obuteco.controller.usuario.UsuariosController;
 import projeto.obuteco.controller.usuario.dto.UsuariosRequest;
@@ -49,10 +50,14 @@ import static org.mockito.Mockito.when;
             "Ana",
             "Ana123",
             "Ana123",
-            CargoEnum.ADMIN,
-            null,
-            null,
-            null
+            CargoEnum.ADMIN
+    );
+
+    UsuariosAtualizacaoRequest atualizacaoRequest = new UsuariosAtualizacaoRequest(
+            "Ana",
+            "Ana123",
+            "Ana123",
+            CargoEnum.ADMIN
     );
 
     EnderecoResponse endereco = new EnderecoResponse("",
@@ -116,20 +121,19 @@ import static org.mockito.Mockito.when;
     @Test
     @DisplayName("atualizar usuario retornando 200")
     void atualiazarUsuario(){
-        when(usuariosService.atualizarUsuario(1L, userRequest)).thenReturn(usuario);
+        when(usuariosService.atualizarUsuario(1L, atualizacaoRequest)).thenReturn(usuario);
 
-        var response = usuariosController.atualizarUsuario(1L, userRequest);
+        var response = usuariosController.atualizarUsuario(1L, atualizacaoRequest);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(UsuariosResponse.de(usuario), response.getBody());
-        verify(usuariosService).atualizarUsuario(1L, userRequest);
+        verify(usuariosService).atualizarUsuario(1L, atualizacaoRequest);
     }
 
     @Test
     @DisplayName("atualizar usuario parcialmente retorna 200")
     void atualizarusuarioParcial(){
-        var request = new UsuariosRequest(null, "Luis", null, null,
-                null, null, null, null);
+        var request = new UsuariosAtualizacaoRequest("Luis", null, null, null);
         usuario.setNome("Luis");
         when(usuariosService.atualizarUsuarioParcial(1L, request)).thenReturn(usuario);
 

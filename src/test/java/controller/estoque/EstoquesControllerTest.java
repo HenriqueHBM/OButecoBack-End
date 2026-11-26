@@ -1,9 +1,11 @@
 package controller.estoque;
 
+import controller.support.ComoUsuario;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
@@ -19,9 +21,13 @@ import projeto.obuteco.model.entity.estoque.EstoquesEntity;
 import projeto.obuteco.model.entity.estoque.MovimentacoesEstoqueEntity;
 import projeto.obuteco.model.entity.produto.ProdutosEntity;
 import projeto.obuteco.model.entity.usuario.UsuariosEntity;
+import projeto.obuteco.model.enums.CargoEnum;
 import projeto.obuteco.model.enums.CategoriaEnum;
 import projeto.obuteco.model.enums.EStatus;
 import projeto.obuteco.model.enums.GrupoEnum;
+import projeto.obuteco.model.infra.spring.security.JwtService;
+import projeto.obuteco.model.infra.spring.security.SecurityConfig;
+import projeto.obuteco.model.repository.usuario.UsuariosRepository;
 import projeto.obuteco.model.service.estoque.EstoquesService;
 import projeto.obuteco.model.service.estoque.MovimentacoesEstoqueService;
 import tools.jackson.databind.ObjectMapper;
@@ -36,6 +42,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(EstoquesController.class)
 @ContextConfiguration(classes = OButecoBackEndApplication.class)
+@Import(SecurityConfig.class)
+@ComoUsuario(cargo = CargoEnum.ADMIN)
 class EstoquesControllerTest {
     @Autowired
     MockMvc mockMvc;
@@ -48,6 +56,12 @@ class EstoquesControllerTest {
 
     @MockitoBean
     MovimentacoesEstoqueService movimentacoesEstoqueService;
+
+    @MockitoBean
+    JwtService jwtService;
+
+    @MockitoBean
+    UsuariosRepository usuariosRepository;
 
     ProdutosEntity produto = new ProdutosEntity(
             1L, "Espetinho", EStatus.ATIVO, CategoriaEnum.NORMAL,
@@ -205,7 +219,7 @@ class EstoquesControllerTest {
     @DisplayName("POST /estoques/movimentacoes/entrada deve registrar e retornar 201")
     void entrada() throws Exception {
         //Arrange
-        when(movimentacoesEstoqueService.entrada(any(MovimentacoesEstoqueRequest.class)))
+        when(movimentacoesEstoqueService.entrada(any(MovimentacoesEstoqueRequest.class), anyLong()))
                 .thenReturn(criarMovimentacao());
 
         //Act
@@ -215,14 +229,14 @@ class EstoquesControllerTest {
 
         //Assert
         resposta.andExpect(status().isCreated());
-        verify(movimentacoesEstoqueService).entrada(any(MovimentacoesEstoqueRequest.class));
+        verify(movimentacoesEstoqueService).entrada(any(MovimentacoesEstoqueRequest.class), eq(1L));
     }
 
     @Test
     @DisplayName("POST /estoques/movimentacoes/saida deve registrar e retornar 201")
     void saida() throws Exception {
         //Arrange
-        when(movimentacoesEstoqueService.saida(any(MovimentacoesEstoqueRequest.class)))
+        when(movimentacoesEstoqueService.saida(any(MovimentacoesEstoqueRequest.class), anyLong()))
                 .thenReturn(criarMovimentacao());
 
         //Act
@@ -232,14 +246,14 @@ class EstoquesControllerTest {
 
         //Assert
         resposta.andExpect(status().isCreated());
-        verify(movimentacoesEstoqueService).saida(any(MovimentacoesEstoqueRequest.class));
+        verify(movimentacoesEstoqueService).saida(any(MovimentacoesEstoqueRequest.class), eq(1L));
     }
 
     @Test
     @DisplayName("POST /estoques/movimentacoes/saida deve repassar o erro da service (saldo insuficiente)")
     void saidaSaldoInsuficiente() throws Exception {
         //Arrange
-        when(movimentacoesEstoqueService.saida(any(MovimentacoesEstoqueRequest.class)))
+        when(movimentacoesEstoqueService.saida(any(MovimentacoesEstoqueRequest.class), anyLong()))
                 .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Saldo insuficiente"));
 
         //Act
@@ -265,7 +279,7 @@ class EstoquesControllerTest {
         //Assert
         resposta.andExpect(status().isCreated())
                 .andExpect(content().string(""));
-        verify(movimentacoesEstoqueService).saidaInsumo(eq(1L), any(MovimentacoesEstoqueRequest.class));
+        verify(movimentacoesEstoqueService).saidaInsumo(eq(1L), any(MovimentacoesEstoqueRequest.class), eq(1L));
     }
 
     @Test
@@ -274,7 +288,7 @@ class EstoquesControllerTest {
         //Arrange
         doThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Produto nao possui insumos cadastrados"))
                 .when(movimentacoesEstoqueService)
-                .saidaInsumo(eq(1L), any(MovimentacoesEstoqueRequest.class));
+                .saidaInsumo(eq(1L), any(MovimentacoesEstoqueRequest.class), eq(1L));
 
         //Act
         var resposta = mockMvc.perform(post("/estoques/movimentacoes/saida-insumo/1")

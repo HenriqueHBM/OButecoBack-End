@@ -3,8 +3,10 @@ package projeto.obuteco.controller.usuario;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import projeto.obuteco.controller.endereco.EnderecoResponse;
+import projeto.obuteco.controller.usuario.dto.UsuariosAtualizacaoRequest;
 import projeto.obuteco.controller.usuario.dto.UsuariosRequest;
 import projeto.obuteco.controller.usuario.dto.UsuariosResponse;
 import projeto.obuteco.model.entity.usuario.UsuariosEntity;
@@ -18,6 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/usuarios")
+@PreAuthorize("hasRole('ADMIN')")
 @CrossOrigin("http://localhost:4200") //pode-se passar um ip para apenas aquele servidor fazer as requisicoes ex. http://localhost:5432
 public class UsuariosController {
     private static final Logger log = LoggerFactory.getLogger(UsuariosController.class);
@@ -31,8 +34,9 @@ public class UsuariosController {
     private final EnderecoService enderecoService;
 
     @PostMapping()
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UsuariosResponse> salvarUsuario(@Valid @RequestBody UsuariosRequest usuariosRequest) {
-        log.info("Solicitação de cadastro de usuário. Usuário: {}", usuariosRequest);
+        log.info("Solicitação de cadastro de usuário. Usuário: {}", usuariosRequest.usuario());
 
         UsuariosEntity usuariosEntity = this.usuariosService.salvarUsuario(usuariosRequest);
 
@@ -45,7 +49,7 @@ public class UsuariosController {
 
     @PutMapping("/{id}")
     public ResponseEntity<UsuariosResponse> atualizarUsuario(@PathVariable Long id,
-                                                             @Valid @RequestBody UsuariosRequest usuariosRequest) {
+                                                             @Valid @RequestBody UsuariosAtualizacaoRequest usuariosRequest) {
         log.info("Solicitação de atualização de usuário. ID: {}", id);
 
         UsuariosEntity usuariosEntity = this.usuariosService.atualizarUsuario(id, usuariosRequest);
@@ -57,7 +61,7 @@ public class UsuariosController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<UsuariosResponse> atualizarUsuarioParcial(@PathVariable Long id,
-                                                                    @Valid @RequestBody UsuariosRequest usuariosRequest) {
+                                                                    @Valid @RequestBody UsuariosAtualizacaoRequest usuariosRequest) {
         log.info("Solicitação de atualização parcial de usuário. ID: {}", id);
 
         UsuariosEntity usuariosEntity = this.usuariosService.atualizarUsuarioParcial(id, usuariosRequest);
@@ -133,6 +137,7 @@ public class UsuariosController {
     }
 
     @GetMapping("/buscarCep/{cep}")
+    @PreAuthorize("hasRole('ESTAGIARIO')")
     public ResponseEntity<EnderecoResponse> buscarCep(@PathVariable String cep){
         log.info("Solicitação de busca de endereço por CEP: {}", cep);
 

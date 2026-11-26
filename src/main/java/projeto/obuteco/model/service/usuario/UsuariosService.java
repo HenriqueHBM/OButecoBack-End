@@ -1,8 +1,13 @@
 package projeto.obuteco.model.service.usuario;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import projeto.obuteco.controller.usuario.dto.UsuariosAtualizacaoRequest;
 import projeto.obuteco.controller.usuario.dto.UsuariosRequest;
 import projeto.obuteco.model.enums.EStatus;
 import projeto.obuteco.model.entity.usuario.UsuariosEntity;
@@ -15,14 +20,25 @@ import java.sql.Timestamp;
 import java.util.List;
 
 @Service
-public class UsuariosService {
+public class UsuariosService implements UserDetailsService {
     private static final Logger log = LoggerFactory.getLogger(UsuariosService.class);
 
-    public UsuariosService(UsuariosRepository usuariosRepository) {
+    private final UsuariosRepository usuariosRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public UsuariosService(UsuariosRepository usuariosRepository, PasswordEncoder passwordEncoder) {
         this.usuariosRepository = usuariosRepository;
+        this.passwordEncoder= passwordEncoder;
     }
 
-    private final UsuariosRepository usuariosRepository;
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return usuariosRepository.findByUsuarioAndDeletedAtIsNull(username)
+                .orElseThrow(() -> {
+                    log.warn("Tentativa de login com usuário inexistente: "+ username);
+
+                    return new UsernameNotFoundException("Usuario ou senha invalidos");});
+    }
 
     public UsuariosEntity buscarUsuarioPorId(Long id){
         log.info("Buscando usuário pelo ID: {}", id);
@@ -37,11 +53,11 @@ public class UsuariosService {
     }
 
     public UsuariosEntity salvarUsuario(UsuariosRequest usuariosRequest) {
-        log.info("Criando usuário. Usuário: {}", usuariosRequest);
+        log.info("Criando usuário. Usuário: {}", usuariosRequest.usuario());
 
         if (usuariosRepository.findByUsuarioAndDeletedAtIsNull(usuariosRequest.usuario()).isPresent()) {
             log.warn("Tentativa de cadastro de usuário já existente. Usuário: {}",
-                    usuariosRequest);
+                    usuariosRequest.usuario());
 
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuário já existe");
         } //valida se atributo usuario ja existe antes de salvar
@@ -50,7 +66,7 @@ public class UsuariosService {
 
         usuariosEntity.setNome(usuariosRequest.nome());
         usuariosEntity.setUsuario(usuariosRequest.usuario());
-        usuariosEntity.setSenha(usuariosRequest.senha());
+        usuariosEntity.setSenha(passwordEncoder.encode(usuariosRequest.senha()));
         usuariosEntity.setCargo(usuariosRequest.cargoEnum());
         usuariosEntity.setStatus(EStatus.ATIVO);
 
@@ -63,22 +79,25 @@ public class UsuariosService {
         return usuarioSalvo;
     }
 
-    public UsuariosEntity atualizarUsuario(Long id, UsuariosRequest usuariosRequest) {
+    public UsuariosEntity atualizarUsuario(Long id, UsuariosAtualizacaoRequest usuariosRequest) {
         log.info("Atualizando usuário. ID: {}", id);
 
         UsuariosEntity usuariosEntity = this.buscarUsuarioPorId(id);
 
         if (!usuariosEntity.getUsuario().equals(usuariosRequest.usuario()) && usuariosRepository.findByUsuarioAndDeletedAtIsNull(usuariosRequest.usuario()).isPresent()) {
             log.warn("Tentativa de alterar usuário para nome de usuário já existente. ID: {}, Usuário: {}", id,
-                    usuariosRequest);
+                    usuariosRequest.usuario());
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuario ja existe");
 
         } //valida se atributo usuario ja existe caso esteja sendo alterado
 
         usuariosEntity.setNome(usuariosRequest.nome());
         usuariosEntity.setUsuario(usuariosRequest.usuario());
-        usuariosEntity.setSenha(usuariosRequest.senha());
+        if (usuariosRequest.senha() != null && !usuariosRequest.senha().isBlank()) {
+            usuariosEntity.setSenha(passwordEncoder.encode(usuariosRequest.senha()));
+        }
         usuariosEntity.setCargo(usuariosRequest.cargoEnum());
+
 
         UsuariosEntity usuarioAtualizado = this.usuariosRepository.save(usuariosEntity);
 
@@ -106,7 +125,7 @@ public class UsuariosService {
 
         return usuarioAtualizado;
     }
-    public UsuariosEntity atualizarUsuarioParcial(Long id, UsuariosRequest usuariosRequest) {
+    public UsuariosEntity atualizarUsuarioParcial(Long id, UsuariosAtualizacaoRequest usuariosRequest) {
         log.info("Iniciando atualização parcial do usuário. ID: {}", id);
 
         UsuariosEntity usuariosEntity = buscarUsuarioPorId(id);
@@ -116,14 +135,16 @@ public class UsuariosService {
             //verifica se nao existe um outro usuario com o mesmo nome do passsado para atualizar
             if (usuariosRepository.findByUsuarioAndDeletedAtIsNull(usuariosRequest.usuario()).isPresent()) {
                 log.warn("Tentativa de alterar usuário para nome de usuário já existente. ID: {}, Usuário: {}", id,
-                        usuariosRequest);
+                        usuariosRequest.usuario());
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuário já existe");
             }
             usuariosEntity.setUsuario(usuariosRequest.usuario());
         } //valida se atributo usuario ja existe caso esteja sendo alterado
 
         if (usuariosRequest.nome() != null) usuariosEntity.setNome(usuariosRequest.nome());
-        if (usuariosRequest.senha() != null) usuariosEntity.setSenha(usuariosRequest.senha());
+        if (usuariosRequest.senha() != null && !usuariosRequest.senha().isBlank()) {
+            usuariosEntity.setSenha(passwordEncoder.encode(usuariosRequest.senha()));
+        }
 
         if (usuariosRequest.cargoEnum() != null) {
             //procura o cargo antes de atualizar se nao lanca exeption
