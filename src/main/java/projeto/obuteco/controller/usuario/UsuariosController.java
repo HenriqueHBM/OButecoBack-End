@@ -21,7 +21,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/usuarios")
 @PreAuthorize("hasRole('ADMIN')")
-@CrossOrigin("*") //pode-se passar um ip para apenas aquele servidor fazer as requisicoes ex. http://localhost:5432
 public class UsuariosController {
     private static final Logger log = LoggerFactory.getLogger(UsuariosController.class);
 
