@@ -171,13 +171,13 @@ class EstoquesControllerTest {
     }
 
     @Test
-    @DisplayName("GET /estoques/{id} deve retornar excecao quando o id nao e numerico")
+    @DisplayName("GET /estoques/{id} deve retornar 400 quando o id nao e numerico")
     void buscarPorIdInvalido() throws Exception {
         //Act
         var resposta = mockMvc.perform(get("/estoques/abc"));
 
         //Assert
-        resposta.andExpect(status().isInternalServerError());
+        resposta.andExpect(status().isBadRequest());
         verify(estoquesService, never()).buscarEstoquePorId(any());
     }
 
@@ -199,7 +199,7 @@ class EstoquesControllerTest {
     }
 
     @Test
-    @DisplayName("POST /estoques deve retornar excecao quando o JSON esta mal formado")
+    @DisplayName("POST /estoques deve retornar 400 quando o JSON esta mal formado")
     void salvarEstoqueJsonMalformado() throws Exception {
         //Arrange
         var corpoInvalido = "{ nao e json";
@@ -210,7 +210,7 @@ class EstoquesControllerTest {
                 .content(corpoInvalido));
 
         //Assert
-        resposta.andExpect(status().isInternalServerError());
+        resposta.andExpect(status().isBadRequest());
         verify(estoquesService, never()).salvarEstoque(any());
     }
 
