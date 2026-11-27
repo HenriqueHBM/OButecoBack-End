@@ -7,6 +7,7 @@ import projeto.obuteco.model.entity.produto.ProdutosEntity;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.List;
 
 public record ProdutoResponse(
         Long id,
@@ -18,7 +19,8 @@ public record ProdutoResponse(
         String observation,
         Timestamp creationDate,
         Timestamp updateDate,
-        Timestamp deletedDate
+        Timestamp deletedDate,
+        List<InsumosResponse> insumos
 ) {
     public static ProdutoResponse de(ProdutosEntity produtosEntity){
         return new ProdutoResponse(
@@ -31,7 +33,11 @@ public record ProdutoResponse(
                 produtosEntity.getObservacao(),
                 produtosEntity.getDataCriacao(),
                 produtosEntity.getDataAtualizacao(),
-                produtosEntity.getDeletedAt()
+                produtosEntity.getDeletedAt(),
+                // ficha técnica: insumos usados pelo produto (vazio para os outros tipos)
+                produtosEntity.getInsumos() == null
+                        ? List.of()
+                        : produtosEntity.getInsumos().stream().map(InsumosResponse::de).toList()
         );
     }
 }
